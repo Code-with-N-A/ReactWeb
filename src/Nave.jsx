@@ -149,7 +149,7 @@ function Nave() {
 
         {/* Nav Links (right side on desktop) */}
         <ul className="hidden md:flex gap-6 font-medium">
-          {["Home", "About", "Contact"].map((item) => (
+          {["Home", "About","Blog","Contact"].map((item) => (
             <li key={item}>
               <NavLink
                 to={item === "Home" ? "/" : `/${item.toLowerCase()}`}
@@ -232,7 +232,7 @@ function Nave() {
         }`}
       >
         <ul className="flex flex-col items-center gap-4 py-4 font-medium">
-          {["Home", "About", "Contact"].map((item) => (
+          {["Home", "About", "Blog", "Contact"].map((item) => (
             <li key={item} className="w-full text-center">
               <NavLink
                 to={item === "Home" ? "/" : `/${item.toLowerCase()}`}
