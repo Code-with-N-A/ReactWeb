@@ -98,9 +98,9 @@ function Home() {
           className="flex-1 flex justify-center mt-10 md:mt-0"
         >
           <img
-            src="https://cdn.dribbble.com/users/1162077/screenshots/3848914/programmer.gif"
+            src={`${import.meta.env.BASE_URL}img/nitesh office .jpg`}
             alt="Illustration of a web developer coding"
-            className="w-72 md:w-96 drop-shadow-lg rounded-2xl"
+            className="w-72 md:w-130 drop-shadow-lg rounded-2xl"
             loading="lazy"
           />
         </motion.div>
