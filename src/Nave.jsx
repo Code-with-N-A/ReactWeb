@@ -117,9 +117,9 @@ function Nave() {
   return (
     <>
       {/* Navbar */}
-      <nav className="fixed top-0 left-0 w-full z-50 flex items-center justify-between bg-white/90 backdrop-blur-md shadow-md px-6 py-4 transition-all duration-300 font-[Poppins]">
+      <nav className="fixed top-0 left-0 w-full z-50 flex items-center justify-between bg-white/90 backdrop-blur-md shadow-md px-6 py-1 transition-all duration-300 font-[Poppins]">
         {/* Logo */}
-        <h2 className="text-2xl font-[Pacifico] text-black tracking-wide drop-shadow-sm">
+        <h2 className="text-2xl font-[Pacifico] text-black tracking-wide drop-shadow-sm my-3">
           AmuleStack
         </h2>
 
@@ -142,7 +142,6 @@ function Nave() {
                 X
               </button>
             )}
-
             {suggestions.length > 0 && (
               <ul className="bg-white shadow-md mt-2 rounded-lg max-h-60 overflow-y-auto border border-gray-300 z-50 absolute w-full">
                 {suggestions.map((s, idx) => (
@@ -200,7 +199,7 @@ function Nave() {
         </div>
       </nav>
 
-      {/* Mobile Search */}
+      {/* Mobile Search + Suggestions */}
       {showSearch && (
         <div
           ref={searchRef}
@@ -222,6 +221,21 @@ function Nave() {
               X
             </button>
           </div>
+
+          {/* Added Mobile Suggestions */}
+          {suggestions.length > 0 && (
+            <ul className="bg-white shadow-md mt-2 rounded-lg max-h-60 overflow-y-auto border border-gray-300 w-11/12 z-50">
+              {suggestions.map((s, idx) => (
+                <li
+                  key={idx}
+                  className="px-4 py-2 cursor-pointer hover:bg-gray-100 transition"
+                  onClick={() => handleSuggestionClick(s.el)}
+                >
+                  {s.text}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
 
@@ -239,7 +253,6 @@ function Nave() {
         <h2 className="text-2xl font-[Pacifico] text-black tracking-wide drop-shadow-sm my-3">
           AmuleStack
         </h2>
-
 
         <ul className="flex flex-col gap-6 w-full items-center font-[Poppins]">
           {["Home", "About", "Blog", "Contact"].map((item) => (

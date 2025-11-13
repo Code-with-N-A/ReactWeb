@@ -18,7 +18,7 @@ const projectsData = [
   },
   {
     id: 2,
-    title: "CSS Portfolio",
+    title: "2. CSS Portfolio",
     description:
       "Modern personal portfolio website styled with advanced CSS.",
     tech: "CSS",
@@ -31,7 +31,7 @@ const projectsData = [
   },
   {
     id: 3,
-    title: "JavaScript MCQZ",
+    title: "3. JavaScript MCQZ",
     description: "Interactive MCQZ with JavaScript logic and UI.",
     tech: "JavaScript",
     year: "2025",
@@ -43,7 +43,7 @@ const projectsData = [
   },
   {
     id: 4,
-    title: "JavaScript ATM",
+    title: "4. JavaScript ATM",
     description: "Interactive ATM with JavaScript logic and UI.",
     tech: "JavaScript",
     year: "2025",
@@ -55,7 +55,7 @@ const projectsData = [
   },
   {
     id: 5,
-    title: "JavaScript Voting",
+    title: "5. JavaScript Voting",
     description: "Interactive Voting with JavaScript logic and UI.",
     tech: "JavaScript",
     year: "2025",
@@ -67,7 +67,7 @@ const projectsData = [
   },
   {
     id: 6,
-    title: "JavaScript Binary Number",
+    title: "6. JavaScript Binary Number",
     description: "Interactive Binary Number with JavaScript logic and UI.",
     tech: "JavaScript",
     year: "2025",
@@ -79,7 +79,7 @@ const projectsData = [
   },
   {
     id: 7,
-    title: "MPQP RGPV Exam Q Paper",
+    title: "7. MPQP RGPV Exam Q Paper",
     description:
       "Complete collection of Polytechnic diploma exam papers from all RGPV branches. Link MPQP.",
     tech: "JavaScript",
@@ -267,7 +267,7 @@ export default function ProjectShowcase() {
     );
 }
 
-/* 🔒 Hide scrollbar globally */
+/* Hide scrollbar globally */
 const style = document.createElement("style");
 style.innerHTML = `
   .hide-scrollbar::-webkit-scrollbar { display: none; }
