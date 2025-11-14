@@ -6,19 +6,23 @@ import Contact from "./Contact";
 import SocialLinks from "./Sosalm";
 import Footer from "./Footer";
 import Blogs from "./Blogs";
+import Signup from "./Signup";
+import Login from "./Login";
 
 function App() {
-  return(
+  return (
     <>
-    <Nave/>
-    <SocialLinks/>
-    <Routes>
-      <Route path='/' element={<Home/>}/>
-      <Route path='about' element={<About/>}/>
-      <Route path='blog' element={<Blogs/>}/>
-      <Route path='contact' element={<Contact/>}/>
-    </Routes>
-        <Footer/>
+      <Nave />
+      <SocialLinks />
+      <Routes>
+        <Route path='/' element={<Home />} />
+        <Route path='about' element={<About />} />
+        <Route path='blog' element={<Blogs />} />
+        <Route path='contact' element={<Contact />} />
+        <Route path='signup' element={<Signup />} />
+        <Route path='login' element={<Login/>} />
+      </Routes>
+      <Footer />
 
     </>
   )

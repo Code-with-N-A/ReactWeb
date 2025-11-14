@@ -160,7 +160,7 @@ function Nave() {
 
         {/* Desktop Nav */}
         <ul className="hidden md:flex gap-6 font-medium">
-          {["Home", "About", "Blog", "Contact"].map((item) => (
+          {["Home", "About", "Blog", "Contact","Signup"].map((item) => (
             <li key={item}>
               <NavLink
                 to={item === "Home" ? "/" : `/${item.toLowerCase()}`}
@@ -255,7 +255,7 @@ function Nave() {
         </h2>
 
         <ul className="flex flex-col gap-6 w-full items-center font-[Poppins]">
-          {["Home", "About", "Blog", "Contact"].map((item) => (
+          {["Home", "About", "Blog", "Contact","Signup"].map((item) => (
             <li key={item} className="w-10/12 text-center">
               <NavLink
                 to={item === "Home" ? "/" : `/${item.toLowerCase()}`}
