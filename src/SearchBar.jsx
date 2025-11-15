@@ -3,6 +3,16 @@ import { useState, useEffect, useRef } from "react";
 export default function SearchBar({ searchText, setSearchText, onClose }) {
   const [suggestions, setSuggestions] = useState([]);
   const searchRef = useRef(null);
+  const inputRef = useRef(null); // <-- NEW
+
+  // 🔥 Auto-focus when SearchBar opens (Mobile only)
+  useEffect(() => {
+    if (window.innerWidth <= 768 && inputRef.current) {
+      setTimeout(() => {
+        inputRef.current.focus();
+      }, 150); // small delay for smooth keyboard opening
+    }
+  }, []);
 
   // Close Searchbar on outside click (Mobile only)
   useEffect(() => {
@@ -47,7 +57,10 @@ export default function SearchBar({ searchText, setSearchText, onClose }) {
     const foundMap = new Map();
     while (walker.nextNode()) {
       const text = walker.currentNode.nodeValue.trim();
-      if (text.toLowerCase().includes(searchText.toLowerCase()) && !foundMap.has(text)) {
+      if (
+        text.toLowerCase().includes(searchText.toLowerCase()) &&
+        !foundMap.has(text)
+      ) {
         foundMap.set(text, walker.currentNode.parentElement);
       }
     }
@@ -73,14 +86,15 @@ export default function SearchBar({ searchText, setSearchText, onClose }) {
       el.style.backgroundColor = bg || "transparent";
     }, 1000);
 
-    setSearchText(""); // empty search text
-    setSuggestions([]); // remove suggestions
+    setSearchText("");
+    setSuggestions([]);
     onClose(); // hide searchbar + remove blur
   };
 
   return (
     <div ref={searchRef} className="search-bar w-full max-w-lg relative z-50">
       <input
+        ref={inputRef} // <-- input auto focus here
         type="text"
         placeholder="Search..."
         value={searchText}
