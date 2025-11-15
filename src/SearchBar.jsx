@@ -1,27 +1,26 @@
 import { useState, useEffect, useRef } from "react";
 
-export default function SearchBar({ searchText, setSearchText }) {
+export default function SearchBar({ searchText, setSearchText, onClose }) {
   const [suggestions, setSuggestions] = useState([]);
   const searchRef = useRef(null);
-  const inputRef = useRef(null);
 
-  // Close searchbar on outside click
+  // Close Searchbar on outside click (Mobile only)
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (searchRef.current && !searchRef.current.contains(e.target)) {
-        setSearchText("");
+      if (window.innerWidth <= 768) {
+        if (searchRef.current && !searchRef.current.contains(e.target)) {
+          onClose(); // hide searchbar
+        }
       }
     };
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [setSearchText]);
+  }, [onClose]);
 
-  // Smart Search Suggestions
+  // Search Suggestions
   useEffect(() => {
-    if (!searchText) {
-      setSuggestions([]);
-      return;
-    }
+    if (!searchText) return setSuggestions([]);
 
     const walker = document.createTreeWalker(
       document.body,
@@ -42,44 +41,46 @@ export default function SearchBar({ searchText, setSearchText }) {
           if (parent.tagName === "A") return NodeFilter.FILTER_REJECT;
           return NodeFilter.FILTER_ACCEPT;
         },
-      },
-      false
+      }
     );
 
     const foundMap = new Map();
     while (walker.nextNode()) {
       const text = walker.currentNode.nodeValue.trim();
-      if (!text) continue;
       if (text.toLowerCase().includes(searchText.toLowerCase()) && !foundMap.has(text)) {
         foundMap.set(text, walker.currentNode.parentElement);
       }
     }
 
-    const suggestionList = Array.from(foundMap.keys())
-      .slice(0, 5)
-      .map((text) => ({ text, el: foundMap.get(text) }));
-
-    setSuggestions(suggestionList);
+    setSuggestions(
+      Array.from(foundMap.keys())
+        .slice(0, 5)
+        .map((text) => ({ text, el: foundMap.get(text) }))
+    );
   }, [searchText]);
 
-  // Click suggestion
+  // Suggestion Click
   const handleSuggestionClick = (el) => {
     if (!el) return;
+
     el.scrollIntoView({ behavior: "smooth", block: "center" });
-    const originalBg = el.style.backgroundColor;
+
+    const bg = el.style.backgroundColor;
     el.style.transition = "background-color 0.3s ease";
     el.style.backgroundColor = "yellow";
+
     setTimeout(() => {
-      el.style.backgroundColor = originalBg || "transparent";
+      el.style.backgroundColor = bg || "transparent";
     }, 1000);
-    setSearchText(""); // Close searchbar
-    setSuggestions([]);
+
+    setSearchText(""); // empty search text
+    setSuggestions([]); // remove suggestions
+    onClose(); // hide searchbar + remove blur
   };
 
   return (
     <div ref={searchRef} className="search-bar w-full max-w-lg relative z-50">
       <input
-        ref={inputRef}
         type="text"
         placeholder="Search..."
         value={searchText}
@@ -87,24 +88,22 @@ export default function SearchBar({ searchText, setSearchText }) {
         className="w-full px-4 py-2 pr-10 rounded-md text-gray-800 border border-gray-300 focus:border-orange-400 focus:outline-none bg-white"
       />
 
-      {/* Clear Button */}
-      {searchText && (
+      {searchText !== "" && (
         <button
           onClick={() => setSearchText("")}
-          className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gray-100 text-gray-600 px-2 rounded hover:bg-gray-200 transition"
+          className="absolute right-2 top-1/2 -translate-y-1/2 bg-gray-100 text-gray-600 px-2 rounded"
         >
           X
         </button>
       )}
 
-      {/* Suggestions */}
       {suggestions.length > 0 && (
-        <ul className="bg-white shadow-md mt-2 rounded-lg max-h-60 overflow-y-auto border border-gray-300 absolute w-full">
-          {suggestions.map((s, idx) => (
+        <ul className="absolute w-full mt-2 bg-white shadow-md border rounded-lg max-h-60 overflow-y-auto z-50">
+          {suggestions.map((s, i) => (
             <li
-              key={idx}
-              className="px-4 py-2 cursor-pointer hover:bg-gray-100 transition"
+              key={i}
               onClick={() => handleSuggestionClick(s.el)}
+              className="px-4 py-2 cursor-pointer hover:bg-gray-100"
             >
               {s.text}
             </li>
