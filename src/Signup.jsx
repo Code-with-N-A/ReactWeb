@@ -1,9 +1,12 @@
-import { useState } from "react";
-import { createUserWithEmailAndPassword, signInWithPopup, fetchSignInMethodsForEmail } from "firebase/auth";
+import { useState, useEffect } from "react";
+import {
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  fetchSignInMethodsForEmail,
+  onAuthStateChanged,
+} from "firebase/auth";
 import { auth, googleProvider } from "./firebase";
-import { useNavigate } from "react-router-dom";
-import { AiOutlineCheckCircle, AiOutlineCloseCircle } from "react-icons/ai";
-import Login from "./Login";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function Signup() {
   const [email, setEmail] = useState("");
@@ -12,7 +15,18 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
   const [showMsg, setShowMsg] = useState(false);
   const [progress, setProgress] = useState(0);
+
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from || "/"; // Redirect target
+
+  // Redirect if user already logged in
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) navigate(from, { replace: true });
+    });
+    return () => unsubscribe();
+  }, [navigate, from]);
 
   const startProgress = () => {
     setProgress(0);
@@ -28,44 +42,47 @@ export default function Signup() {
     }, 25);
   };
 
+  const showNotification = (text, type) => {
+    setMsg({ text, type });
+    setShowMsg(true);
+    startProgress();
+  };
+
   const handleSignup = async () => {
     if (!email || !password) {
-      setMsg({ text: "Please enter both email and password.", type: "error" });
-      setShowMsg(true);
-      startProgress();
+      showNotification("Please enter both email and password", "error");
       return;
     }
 
     setLoading(true);
     try {
-      // Check if email already exists
       const methods = await fetchSignInMethodsForEmail(auth, email);
       if (methods.length > 0) {
-        setMsg({ text: "This email is already registered. Please login.", type: "error" });
-        setShowMsg(true);
-        startProgress();
+        showNotification("This email is already registered", "error");
         return;
       }
 
       await createUserWithEmailAndPassword(auth, email, password);
-      setMsg({ text: "🎉 Signup Successful! Redirecting...", type: "success" });
-      setShowMsg(true);
-      startProgress();
+      showNotification("Signup successful! Redirecting...", "success");
 
       setEmail("");
       setPassword("");
 
-      setTimeout(() => navigate("/"), 2000);
+      setTimeout(() => navigate(from, { replace: true }), 2000);
     } catch (error) {
       let errorMessage = "Something went wrong!";
       switch (error.code) {
-        case "auth/invalid-email": errorMessage = "Invalid email address."; break;
-        case "auth/weak-password": errorMessage = "Password must be at least 6 characters."; break;
+        case "auth/invalid-email":
+          errorMessage = "Invalid email address";
+          break;
+        case "auth/weak-password":
+          errorMessage = "Password must be at least 6 characters";
+          break;
       }
-      setMsg({ text: errorMessage, type: "error" });
-      setShowMsg(true);
-      startProgress();
-    } finally { setLoading(false); }
+      showNotification(errorMessage, "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGoogleLogin = async () => {
@@ -74,69 +91,79 @@ export default function Signup() {
     setShowMsg(false);
     setProgress(0);
     try {
-      // Get email from Google first
       const result = await signInWithPopup(auth, googleProvider);
       const userEmail = result.user.email;
 
-      // Check if user already exists
       const methods = await fetchSignInMethodsForEmail(auth, userEmail);
       if (methods.length > 1) {
-        setMsg({ text: "This Google account is already registered. Logging you in...", type: "success" });
+        showNotification("This Google account is already registered. Logging you in...", "success");
       } else {
-        setMsg({ text: "🎉 Google Sign-In Successful! Redirecting...", type: "success" });
+        showNotification("Google Sign-In Successful! Redirecting...", "success");
       }
-      setShowMsg(true);
-      startProgress();
-      setTimeout(() => navigate("/"), 2000);
+
+      setTimeout(() => navigate(from, { replace: true }), 2000);
     } catch (error) {
-      setMsg({ text: "Google Sign-In failed.", type: "error" });
-      setShowMsg(true);
-      startProgress();
+      showNotification("Google Sign-In failed", "error");
       console.error(error);
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-[calc(100vh-80px)] w-full bg-blue-50 flex flex-col md:flex-row mt-20 mb-12 px-4 sm:px-6 md:px-12 gap-0 relative">
+    <div className="min-h-screen w-full bg-gray-50 flex flex-col md:flex-row px-4 sm:px-6 md:px-10 gap-4 md:gap-6 pt-24 md:pt-32 pb-12 md:pb-0">
 
       {/* Notification */}
       {showMsg && (
-        <div className="fixed top-5 inset-x-0 flex justify-center z-50 px-2">
-          <div className="w-full sm:w-96 max-w-md flex flex-col items-center">
-            <div className={`flex items-center gap-3 p-3 sm:p-4 rounded-xl shadow-lg text-white font-semibold overflow-hidden
-              ${msg.type === "success" ? "bg-green-500" : "bg-red-500"} animate-slideInDown`}>
-              <span className="text-xl sm:text-2xl">
-                {msg.type === "success" ? <AiOutlineCheckCircle /> : <AiOutlineCloseCircle />}
+        <div className="fixed top-4 inset-x-0 flex justify-center z-50 px-2 animate-slideInDown">
+          <div className="w-full sm:w-80 max-w-md flex flex-col items-center">
+            <div className={`flex items-center gap-3 p-3 rounded-xl shadow-md overflow-hidden
+              ${msg.type === "success" ? "bg-green-100 border border-green-500" : "bg-red-100 border border-red-500"}`}>
+              
+              <span className={`text-base font-bold p-1 rounded-full border ${
+                msg.type === "success"
+                  ? "text-green-600 border-green-600"
+                  : "text-red-600 border-red-600"
+              }`}>
+                {msg.type === "success" ? "✔️" : "❌"}
               </span>
-              <p className="flex-1 text-sm sm:text-base text-center">{msg.text}</p>
+
+              <p className="flex-1 text-sm text-gray-800">{msg.text}</p>
             </div>
-            <div className="h-1 bg-gray-200 w-full rounded-b-lg mt-1">
-              <div className="h-1 bg-gray-400 transition-all" style={{ width: `${progress}%` }}></div>
+
+            <div className="h-1 bg-gray-200 w-full rounded-b-lg mt-1 overflow-hidden">
+              <div
+                className="h-full bg-gray-400 transition-all"
+                style={{ width: `${progress}%` }}
+              ></div>
             </div>
           </div>
         </div>
       )}
 
       {/* Left Side */}
-      <div className="flex-1 relative min-h-[350px] md:min-h-[400px] bg-blue-500 text-white rounded-tl-2xl rounded-bl-2xl p-8 flex flex-col justify-center gap-4 overflow-hidden">
-        <h1 className="text-3xl md:text-4xl font-bold">Welcome to AmuleStack</h1>
-        <p className="text-base md:text-lg">
-          Join our community! Create your account, explore amazing features, and enjoy a smooth signup experience.
+      <div className="flex-1 relative min-h-[280px] md:min-h-[350px] bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-tl-2xl rounded-bl-2xl p-4 md:p-6 flex flex-col justify-center gap-2 md:gap-3 overflow-hidden">
+        <h1 className="text-xl md:text-2xl font-bold">Welcome to AmuleStack</h1>
+        <p className="text-sm md:text-base">
+          Join our community! Create your account and explore amazing features with a smooth signup experience.
         </p>
-        <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500 transform rotate-45 translate-x-8 -translate-y-8 md:w-24 md:h-24 md:translate-x-12 md:-translate-y-12"></div>
-        <div className="absolute bottom-0 left-0 w-16 h-16 bg-blue-500 transform -rotate-45 -translate-x-8 translate-y-8 md:w-24 md:h-24 md:-translate-x-12 md:translate-y-12"></div>
+
+        {/* Floating Graphics */}
+        <div className="absolute top-2 right-2 w-12 h-12 md:w-16 md:h-16 bg-blue-400 rounded-full opacity-50 animate-bounce-slow"></div>
+        <div className="absolute bottom-2 left-2 w-12 h-12 md:w-16 md:h-16 bg-blue-300 rounded-full opacity-40 animate-bounce-slow delay-200"></div>
+        <div className="absolute top-1/2 left-1/2 w-20 h-20 bg-blue-200 rounded-full opacity-20 transform -translate-x-1/2 -translate-y-1/2 animate-spin-slow"></div>
       </div>
 
       {/* Right Side */}
-      <div className="flex-1 relative min-h-[350px] md:min-h-[400px] bg-white rounded-tr-2xl rounded-br-2xl p-8 flex flex-col gap-6 justify-center shadow-lg overflow-hidden">
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-800 text-center">Sign Up</h2>
+      <div className="flex-1 relative min-h-[280px] md:min-h-[350px] bg-white rounded-tr-2xl rounded-br-2xl p-4 md:p-6 flex flex-col gap-3 justify-center shadow-md overflow-hidden">
+        <h2 className="text-lg md:text-xl font-bold text-gray-800 text-center">Sign Up</h2>
 
         <input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Email"
-          className="border-b-2 border-gray-300 focus:border-orange-500 outline-none py-2 text-base"
+          className="border-b-2 border-gray-300 focus:border-orange-500 outline-none py-2 text-sm md:text-base transition"
         />
 
         <input
@@ -144,13 +171,13 @@ export default function Signup() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Password"
-          className="border-b-2 border-gray-300 focus:border-orange-500 outline-none py-2 text-base"
+          className="border-b-2 border-gray-300 focus:border-orange-500 outline-none py-2 text-sm md:text-base transition"
         />
 
         <button
           onClick={handleSignup}
           disabled={loading}
-          className="bg-gray-200 hover:bg-gray-300 text-black py-3 rounded-md font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-gray-200 hover:bg-gray-300 text-black py-2 rounded-md font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? "Creating Account..." : "Sign Up"}
         </button>
@@ -158,28 +185,40 @@ export default function Signup() {
         <button
           onClick={handleGoogleLogin}
           disabled={loading}
-          className="flex items-center justify-center gap-3 py-3 border border-gray-300 rounded-md text-black hover:bg-gray-100 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center justify-center gap-2 py-2 border border-gray-300 rounded-md text-black hover:bg-gray-100 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-6 h-6"/>
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5"/>
           Sign up with Google
         </button>
 
-        <p className="text-center text-gray-500">
+        <p className="text-center text-gray-500 text-sm md:text-base">
           Already have an account?{" "}
-          
-          <span onClick={() => navigate("/Login")} className="text-orange-500 cursor-pointer hover:underline">
+          <span onClick={() => navigate("/Login", { state: { from } })} className="text-orange-500 cursor-pointer hover:underline">
             Login
           </span>
         </p>
       </div>
 
-      {/* Tailwind Animation */}
+      {/* Tailwind Animations */}
       <style>{`
         @keyframes slideInDown {
           0% { transform: translateY(-120%); opacity: 0; }
           100% { transform: translateY(0); opacity: 1; }
         }
         .animate-slideInDown { animation: slideInDown 0.5s ease-out forwards; }
+
+        @keyframes bounce-slow {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+        .animate-bounce-slow { animation: bounce-slow 3s ease-in-out infinite; }
+        .delay-200 { animation-delay: 0.2s; }
+
+        @keyframes spin-slow {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow { animation: spin-slow 20s linear infinite; }
       `}</style>
     </div>
   );

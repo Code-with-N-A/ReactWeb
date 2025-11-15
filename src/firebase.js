@@ -4,7 +4,7 @@ import { getAuth, GoogleAuthProvider } from "firebase/auth";
 // Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyB8nnkTuJn7GcD9jrWLXcgU7Nb0qKmt9Q4",
-  authDomain: "amulestack.firebaseapp.com",
+  authDomain: "amulestack.netlify.app/",
   projectId: "amulestack",
   storageBucket: "amulestack.firebasestorage.app",
   messagingSenderId: "784935604190",

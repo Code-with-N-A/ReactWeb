@@ -1,3 +1,4 @@
+// src/App.jsx
 import { Route, Routes } from "react-router-dom";
 import Nave from "./Nave";
 import About from "./About";
@@ -8,23 +9,51 @@ import Footer from "./Footer";
 import Blogs from "./Blogs";
 import Signup from "./Signup";
 import Login from "./Login";
+import ProtectedRoute from "./ProtectedRoute";
 
 function App() {
   return (
     <>
       <Nave />
       <SocialLinks />
-      <Routes>
-        <Route path='/' element={<Home />} />
-        <Route path='about' element={<About />} />
-        <Route path='blog' element={<Blogs />} />
-        <Route path='contact' element={<Contact />} />
-        <Route path='signup' element={<Signup />} />
-        <Route path='login' element={<Login/>} />
-      </Routes>
-      <Footer />
 
+      <Routes>
+        <Route path="/" element={<Home />} />
+
+        <Route
+          path="/about"
+          element={
+            <ProtectedRoute>
+              <About />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/blog"
+          element={
+            <ProtectedRoute>
+              <Blogs />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/contact"
+          element={
+            <ProtectedRoute>
+              <Contact />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/login" element={<Login />} />
+
+        <Route path="*" element={<Home />} />
+      </Routes>
+
+      <Footer />
     </>
-  )
-};
+  );
+}
+
 export default App;

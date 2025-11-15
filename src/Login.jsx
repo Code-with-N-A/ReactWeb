@@ -1,9 +1,7 @@
-// src/Login.jsx
-import { useState, useEffect } from "react";
-import { signInWithEmailAndPassword, signInWithPopup, signOut } from "firebase/auth";
+import { useState } from "react";
+import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "./firebase";
-import { useNavigate } from "react-router-dom";
-import { AiOutlineCheckCircle, AiOutlineCloseCircle } from "react-icons/ai";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -12,25 +10,10 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [showMsg, setShowMsg] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [user, setUser] = useState(null);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
-      if (currentUser) {
-        setUser({
-          email: currentUser.email,
-          photoURL:
-            currentUser.photoURL ||
-            "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"
-        });
-      } else {
-        setUser(null);
-      }
-    });
-    return () => unsubscribe();
-  }, []);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from || "/"; // Redirect target
 
   const startProgress = () => {
     setProgress(0);
@@ -61,6 +44,7 @@ export default function Login() {
       startProgress();
       setEmail("");
       setPassword("");
+      navigate(from, { replace: true }); // Redirect to original page
     } catch (error) {
       let errorMessage = "Something went wrong!";
       switch (error.code) {
@@ -92,6 +76,7 @@ export default function Login() {
       setMsg({ text: "🎉 Google Login Successful!", type: "success" });
       setShowMsg(true);
       startProgress();
+      navigate(from, { replace: true }); // Redirect to original page
     } catch (error) {
       setMsg({ text: "Google Sign-In failed.", type: "error" });
       setShowMsg(true);
@@ -102,82 +87,50 @@ export default function Login() {
     }
   };
 
-  const handleLogout = async () => {
-    await signOut(auth);
-    setShowDropdown(false);
-    setUser(null);
-    setMsg({ text: "Logged out successfully.", type: "success" });
-    setShowMsg(true);
-    startProgress();
-  };
-
   return (
-    <div className="min-h-[calc(100vh-80px)] w-full bg-gray-50 flex flex-col md:flex-row pt-24 pb-12 px-4 sm:px-6 md:px-12 relative">
+    <div className="min-h-screen w-full bg-gray-50 flex flex-col md:flex-row px-4 sm:px-6 md:px-10 gap-4 md:gap-6 pt-24 md:pt-32 pb-12 md:pb-0">
 
       {/* Notification */}
       {showMsg && (
-        <div className="fixed top-5 inset-x-0 flex justify-center z-50 px-2">
-          <div className="w-full sm:w-96 max-w-md flex flex-col items-center">
-            <div
-              className={`flex items-center gap-3 p-3 sm:p-4 rounded-xl shadow-lg text-white font-semibold overflow-hidden
-              ${msg.type === "success" ? "bg-green-500" : "bg-red-500"} animate-slideInDown`}
-            >
-              <span className="text-xl sm:text-2xl">
-                {msg.type === "success" ? <AiOutlineCheckCircle /> : <AiOutlineCloseCircle />}
-              </span>
-              <p className="flex-1 text-sm sm:text-base text-center">{msg.text}</p>
+        <div className="fixed top-4 inset-x-0 flex justify-center z-50 px-2 animate-slideInDown">
+          <div className="w-full sm:w-80 max-w-md flex flex-col items-center">
+            <div className={`flex items-center gap-3 p-3 rounded-xl shadow-md overflow-hidden
+              ${msg.type === "success" ? "bg-green-100 border border-green-500" : "bg-red-100 border border-red-500"}`}>
+              <p className="flex-1 text-sm sm:text-base text-gray-800 text-center">{msg.text}</p>
             </div>
-            <div className="h-1 bg-gray-200 w-full rounded-b-lg mt-1">
-              <div className="h-1 bg-gray-400 transition-all" style={{ width: `${progress}%` }}></div>
+            <div className="h-1 bg-gray-200 w-full rounded-b-lg mt-1 overflow-hidden">
+              <div className="h-full bg-gray-400 transition-all" style={{ width: `${progress}%` }}></div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Gmail Profile Icon */}
-      {user && (
-        <div className="absolute top-16 right-3 flex flex-col items-end z-10 mt-6">
-          <img
-            src={user.photoURL}
-            alt="User Profile"
-            className="w-6 h-6 md:w-10 md:h-10 rounded-full border border-gray-300 cursor-pointer"
-            onClick={() => setShowDropdown(!showDropdown)}
-          />
-          {showDropdown && (
-            <div className="mt-2 w-64 bg-white border border-gray-300 shadow-lg rounded-md p-4 flex flex-col items-center animate-fadeIn">
-              <p className="text-gray-700 text-sm break-words text-center">{user.email}</p>
-              <button
-                onClick={handleLogout}
-                className="mt-3 w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-md font-semibold transition-all duration-300"
-              >
-                Logout
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Main Cards Container */}
-<div className="flex flex-col md:flex-row w-11/12 md:w-3/4 h-auto md:h-[420px] gap-0 mt-6 mx-auto">
+      <div className="flex flex-col md:flex-row w-full max-w-5xl mx-auto h-auto md:h-[480px] gap-4 md:gap-6">
 
         {/* Left Card */}
-        <div className="flex-1 bg-blue-500 text-white rounded-tl-2xl rounded-bl-2xl p-6 flex flex-col justify-center gap-4 shadow-lg">
-          <h1 className="text-2xl md:text-3xl font-bold">Welcome Back!</h1>
-          <p className="text-sm md:text-base">
+        <div className="flex-1 relative bg-blue-500 text-white rounded-t-2xl md:rounded-tl-2xl md:rounded-bl-2xl p-6 flex flex-col justify-center gap-3 overflow-hidden">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Welcome Back!</h1>
+          <p className="text-sm sm:text-base md:text-lg">
             Login to your account and continue exploring amazing features. Fast and secure login experience.
           </p>
+
+          {/* Floating Graphics */}
+          <div className="absolute top-2 right-2 w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-blue-400 rounded-full opacity-50 animate-bounce-slow"></div>
+          <div className="absolute bottom-2 left-2 w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-blue-300 rounded-full opacity-40 animate-bounce-slow delay-200"></div>
+          <div className="absolute top-1/2 left-1/2 w-16 sm:w-20 h-16 sm:h-20 bg-blue-200 rounded-full opacity-20 transform -translate-x-1/2 -translate-y-1/2 animate-spin-slow"></div>
         </div>
 
         {/* Right Card */}
-        <div className="flex-1 bg-white rounded-tr-2xl rounded-br-2xl p-6 flex flex-col gap-4 justify-center shadow-xl">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-800 text-center">Login</h2>
+        <div className="flex-1 bg-white rounded-b-2xl md:rounded-tr-2xl md:rounded-br-2xl p-6 flex flex-col gap-4 justify-center shadow-md">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 text-center">Login</h2>
 
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Email"
-            className="border-b-2 border-gray-300 focus:border-orange-500 outline-none py-2 text-sm md:text-base"
+            className="border-b-2 border-gray-300 focus:border-orange-500 outline-none py-3 text-sm sm:text-base md:text-lg transition"
           />
 
           <input
@@ -185,13 +138,13 @@ export default function Login() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
-            className="border-b-2 border-gray-300 focus:border-orange-500 outline-none py-2 text-sm md:text-base"
+            className="border-b-2 border-gray-300 focus:border-orange-500 outline-none py-3 text-sm sm:text-base md:text-lg transition"
           />
 
           <button
             onClick={handleEmailLogin}
             disabled={loading}
-            className="bg-orange-500 hover:bg-orange-600 text-white py-2.5 rounded-md font-semibold text-sm md:text-base transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-md font-semibold text-sm sm:text-base md:text-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Logging In..." : "Login"}
           </button>
@@ -199,15 +152,15 @@ export default function Login() {
           <button
             onClick={handleGoogleLogin}
             disabled={loading}
-            className="flex items-center justify-center gap-2 py-2.5 border border-gray-300 rounded-md text-black text-sm md:text-base hover:bg-gray-100 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-2 py-3 border border-gray-300 rounded-md text-black text-sm sm:text-base md:text-lg hover:bg-gray-100 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5 md:w-6 md:h-6" />
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 sm:w-6 md:w-7 h-5 sm:h-6 md:h-7" />
             Login with Google
           </button>
 
-          <p className="text-center text-gray-500 text-sm md:text-base">
+          <p className="text-center text-gray-500 text-sm sm:text-base md:text-base">
             Don't have an account?{" "}
-            <span onClick={() => navigate("/signup")} className="text-orange-500 cursor-pointer hover:underline">
+            <span onClick={() => navigate("/signup", { state: { from } })} className="text-orange-500 cursor-pointer hover:underline">
               Sign Up
             </span>
           </p>
@@ -222,11 +175,18 @@ export default function Login() {
         }
         .animate-slideInDown { animation: slideInDown 0.5s ease-out forwards; }
 
-        @keyframes fadeIn {
-          0% { opacity: 0; transform: translateY(-10px); }
-          100% { opacity: 1; transform: translateY(0); }
+        @keyframes bounce-slow {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
         }
-        .animate-fadeIn { animation: fadeIn 0.3s ease-out forwards; }
+        .animate-bounce-slow { animation: bounce-slow 3s ease-in-out infinite; }
+        .delay-200 { animation-delay: 0.2s; }
+
+        @keyframes spin-slow {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow { animation: spin-slow 20s linear infinite; }
       `}</style>
     </div>
   );
