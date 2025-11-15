@@ -14,19 +14,16 @@ function Nave() {
 
   const menuItems = ["Home", "About", "Blog", "Contact"];
 
-  // 🔍 Toggle SearchBar (Mobile)
   const toggleSearch = () => {
     setShowSearch(!showSearch);
     if (!showSearch && menuOpen) setMenuOpen(false);
   };
 
-  // 📌 Sidebar Toggle
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
     if (!menuOpen && showSearch) setShowSearch(false);
   };
 
-  // Firebase Auth Listener
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
@@ -40,13 +37,11 @@ function Nave() {
     return () => unsubscribe();
   }, []);
 
-  // Logout
   const handleLogout = async () => {
     await signOut(auth);
     setUser(null);
   };
 
-  // ❗ Phone Mode → Click outside hide searchbar
   useEffect(() => {
     if (!showSearch) return;
 
@@ -63,13 +58,13 @@ function Nave() {
 
   return (
     <>
-      {/* 🔥 NAVBAR */}
+      {/* NAVBAR */}
       <nav className="fixed top-0 left-0 w-full z-50 flex items-center justify-between bg-white/95 backdrop-blur-md shadow-md px-4 md:px-6 py-3 font-[Poppins]">
         <h2 className="text-2xl font-[Pacifico] text-black tracking-wide">
           AmuleStack
         </h2>
 
-        {/* 🔍 Desktop Search */}
+        {/* Desktop Search */}
         <div className="hidden md:flex flex-1 justify-center relative">
           <SearchBar
             searchText={searchText}
@@ -78,7 +73,7 @@ function Nave() {
           />
         </div>
 
-        {/* Desktop Menu + Profile */}
+        {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-6">
           <ul className="flex gap-6 font-medium">
             {menuItems.map((item) => (
@@ -86,10 +81,9 @@ function Nave() {
                 <NavLink
                   to={item === "Home" ? "/" : `/${item.toLowerCase()}`}
                   className={({ isActive }) =>
-                    `pb-1 transition-colors duration-200 ${
-                      isActive
-                        ? "border-b-2 border-orange-400 text-orange-500"
-                        : "hover:border-b-2 hover:border-orange-400"
+                    `pb-1 transition-colors duration-200 ${isActive
+                      ? "border-b-2 border-orange-400 text-orange-500"
+                      : "hover:border-b-2 hover:border-orange-400"
                     }`
                   }
                 >
@@ -106,7 +100,7 @@ function Nave() {
           />
         </div>
 
-        {/* 🔥 Mobile Icons */}
+        {/* Mobile Icons */}
         <div className="flex items-center gap-4 md:hidden">
           <button
             onClick={toggleSearch}
@@ -128,7 +122,7 @@ function Nave() {
         </div>
       </nav>
 
-      {/* 🔥 BLUR OVERLAY — only when SearchBar open (MOBILE) */}
+      {/* Blur Overlay */}
       {showSearch && (
         <div
           className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden"
@@ -136,7 +130,7 @@ function Nave() {
         ></div>
       )}
 
-      {/* 🔥 MOBILE SEARCH BAR BOX */}
+      {/* Mobile Search Box */}
       {showSearch && (
         <div
           id="mobile-search-box"
@@ -158,14 +152,16 @@ function Nave() {
         ></div>
       )}
 
-      {/* Side Menu */}
+      {/*  SIDE MENU — Navbar ke niche open hoga  */}
       <div
-        className={`fixed top-0 right-0 h-full w-3/4 sm:w-1/2 bg-white z-50 shadow-2xl transform duration-500 md:hidden pt-16 ${
-          menuOpen ? "translate-x-0" : "translate-x-full"
-        }`}
+        className={`fixed top-14 right-0 h-full w-3/4 sm:w-1/2 bg-white z-50 shadow-2xl border-t border-gray-300 transform duration-500 md:hidden ${menuOpen ? "translate-x-0" : "translate-x-full"
+          }`}
       >
-        <div className="flex items-center justify-between px-4 mb-4">
-          <h2 className="text-2xl font-[Pacifico]">AmuleStack</h2>
+        {/* TOP ROW */}
+        <div className="flex items-center justify-between px-4 py-4 bg-orange-100 border-b border-orange-300 rounded-bl-xl">
+          <h2 className="text-2xl font-[Pacifico] text-orange-700">
+            AmuleStack
+          </h2>
 
           <UserProfile
             user={user}
@@ -174,17 +170,17 @@ function Nave() {
           />
         </div>
 
-        <ul className="flex flex-col gap-3 w-full pl-6 font-[Poppins]">
+        {/* Menu Links */}
+        <ul className="flex flex-col gap-3 w-full px-6 mt-4 font-[Poppins]">
           {menuItems.map((item) => (
             <li key={item}>
               <NavLink
                 to={item === "Home" ? "/" : `/${item.toLowerCase()}`}
                 onClick={() => setMenuOpen(false)}
                 className={({ isActive }) =>
-                  `block py-3 text-lg transition ${
-                    isActive
-                      ? "text-orange-500 bg-gray-100"
-                      : "text-gray-700 hover:bg-gray-100"
+                  `block py-3 text-lg transition rounded-lg ${isActive
+                    ? "text-orange-500 bg-orange-50"
+                    : "text-gray-700 hover:bg-gray-100"
                   }`
                 }
               >
