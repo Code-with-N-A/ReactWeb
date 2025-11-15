@@ -1,14 +1,39 @@
 import { useEffect, useState, useRef } from "react";
 import Papa from "papaparse";
 
+// In-memory cache
+let blogsCache = null;
+
+//  Skeleton Shimmer Component (NO IMPORT NEEDED)
+function BlogSkeleton() {
+  return (
+    <div className="flex flex-col items-center w-full mt-6 animate-pulse">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <div
+          key={i}
+          className="bg-white shadow-md w-[210mm] max-w-[95vw] p-6 mb-10 rounded-md"
+        >
+          <div className="w-full h-28 rounded-md mb-4 bg-gray-300"></div>
+
+          <div className="h-6 bg-gray-300 rounded mb-3 w-3/4"></div>
+          <div className="h-4 bg-gray-300 rounded mb-2 w-full"></div>
+          <div className="h-4 bg-gray-300 rounded mb-2 w-5/6"></div>
+          <div className="h-4 bg-gray-300 rounded w-4/6"></div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function Blogs() {
   const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true); // ⬅ NEW
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const cardRefs = useRef([]);
   const mainRef = useRef(null);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Detect mobile or tablet
+  // Detect mobile screen
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 1024;
@@ -20,11 +45,17 @@ function Blogs() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Convert links into clickable buttons
+  // Convert text links into buttons
   const makeLinksClickable = (text) => {
-    const urlRegex = /(https?:\/\/[^\s<]+|www\.[^\s<]+|data:image\/[a-zA-Z]+;base64,[^\s<]+)/gi;
+    const urlRegex =
+      /(https?:\/\/[^\s<]+|www\.[^\s<]+|data:image\/[a-zA-Z]+;base64,[^\s<]+)/gi;
+
     return text.replace(urlRegex, (url) => {
-      const safeUrl = url.startsWith("http") ? url : url.startsWith("data:") ? url : "https://" + url;
+      const safeUrl = url.startsWith("http")
+        ? url
+        : url.startsWith("data:")
+          ? url
+          : "https://" + url;
 
       if (url.startsWith("data:image")) {
         return `<a href="#" onclick="(function(){
@@ -36,22 +67,41 @@ function Blogs() {
           img.style.margin='20px auto';
           newTab.document.body.style.background='#f0f0f0';
           newTab.document.body.appendChild(img);
-        })(); return false;" 
+        })(); return false;"
         style="background-color:#d1ecff;color:#0369a1;text-decoration:none;padding:2px 6px;border-radius:4px;">Link Click</a>`;
       }
 
       return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer"
-        style="background-color:#d1ecff;color:#0369a1;text-decoration:none;padding:2px 6px;border-radius:4px;">Link Click</a>`;
+      style="background-color:#d1ecff;color:#0369a1;text-decoration:none;padding:2px 6px;border-radius:4px;">Link Click</a>`;
     });
   };
 
-  // Fetch CSV
+  // Fetch CSV + Cache
   useEffect(() => {
-    const fetchCSV = async () => {
+    const loadData = async () => {
       try {
+        // Memory cache
+        if (blogsCache) {
+          setData(blogsCache);
+          setLoading(false);
+          return;
+        }
+
+        // LocalStorage cache
+        const stored = localStorage.getItem("blogsData");
+        if (stored) {
+          const parsedStored = JSON.parse(stored);
+          blogsCache = parsedStored;
+          setData(parsedStored);
+          setLoading(false);
+          return;
+        }
+
+        // Live fetch
         const response = await fetch(
           "https://docs.google.com/spreadsheets/d/1tEQKsVOcB58VleOgFuKWy-PTuv1R9MMG1dVRzcQfAOk/export?format=csv&gid=670473458"
         );
+
         const csvText = await response.text();
         const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true });
 
@@ -71,62 +121,65 @@ function Blogs() {
           };
         });
 
+        blogsCache = formatted;
+        localStorage.setItem("blogsData", JSON.stringify(formatted));
         setData(formatted);
       } catch (err) {
-        console.error("Error fetching CSV:", err);
+        console.error("Error:", err);
       }
+
+      setLoading(false);
     };
-    fetchCSV();
+
+    setTimeout(loadData, 500); // Slow effect 0.5s (Google like)
   }, []);
 
-  // Scroll to blog
+  // Scroll
   const scrollToCard = (index) => {
     if (cardRefs.current[index]) {
-      cardRefs.current[index].scrollIntoView({ behavior: "smooth", block: "start" });
+      cardRefs.current[index].scrollIntoView({ behavior: "smooth" });
     }
   };
 
   return (
     <div
       className="flex font-sans bg-gray-100 relative"
-      style={{
-        paddingTop: "105px",
-        minHeight: "100vh",
-        overflow: "hidden", // Hide body scrollbar
-      }}
+      style={{ paddingTop: "105px", minHeight: "100vh" }}
     >
       {/* Sidebar */}
       <aside
-        className={`fixed transition-all duration-500 ${
-          sidebarVisible ? "w-64 opacity-100" : "w-0 opacity-0"
-        } border-r border-gray-300 bg-white`}
+        className={`fixed transition-all duration-500 ${sidebarVisible ? "w-64 opacity-100" : "w-0 opacity-0"
+          } border-r border-gray-300 bg-white`}
         style={{
-          top: "75px",
-          left: 0,
+          top: "68px",
           height: "calc(100vh - 75px)",
           overflow: "auto",
-          zIndex: isMobile ? 50 : "auto",
           scrollbarWidth: "none",
-          msOverflowStyle: "none",
         }}
       >
         <style>{`aside::-webkit-scrollbar{display:none;}`}</style>
-        {sidebarVisible && (
+
+        {/* Sidebar Skeleton */}
+        {loading ? (
+          <div className="p-4 animate-pulse">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="h-10 w-full bg-gray-300 rounded mb-4"></div>
+            ))}
+          </div>
+        ) : (
           <>
             <div className="flex items-center justify-center h-12 bg-gray-200 text-gray-800 font-semibold text-lg sticky top-0">
               Headings
             </div>
+
             <ul className="space-y-3 p-4">
               {data.map((item, index) => (
                 <li
                   key={index}
                   onClick={() => scrollToCard(index)}
-                  className="flex flex-col text-gray-700 hover:text-blue-600 cursor-pointer transition-colors duration-300 p-2 rounded-md bg-cyan-50 hover:bg-cyan-100"
+                  className="flex flex-col text-gray-700 hover:text-blue-600 cursor-pointer p-2 rounded-md bg-cyan-50"
                 >
-                  <div className="flex items-center">
-                    <span className="font-bold mr-2">{index + 1}.</span>
-                    <span className="font-medium truncate">{item.demoText}</span>
-                  </div>
+                  <span className="font-bold">{index + 1}. {item.demoText}</span>
                   <span className="text-xs text-gray-500 ml-6">{item.date}</span>
                 </li>
               ))}
@@ -135,81 +188,68 @@ function Blogs() {
         )}
       </aside>
 
-      {/* Sidebar Toggle */}
+      {/* Toggle Button */}
       <div
         onClick={() => setSidebarVisible(!sidebarVisible)}
-        className="fixed cursor-pointer bg-gray-200 hover:bg-gray-300 rounded-r-md flex items-center justify-center transition-all duration-500 shadow-md"
+        className="fixed cursor-pointer bg-gray-200 hover:bg-gray-300 rounded-r-md flex items-center justify-center shadow-md"
         style={{
           left: sidebarVisible && !isMobile ? "16.5rem" : "0",
-          top: "85px",
+          top: "68px",
           width: "40px",
           height: "40px",
           fontSize: "2rem",
-          fontWeight: "bold",
           color: "#1e3a8a",
-          zIndex: 60,
         }}
       >
         {sidebarVisible ? "<" : ">"}
       </div>
 
-      {/* Main Blogs Section */}
+      {/* Main */}
       <main
         ref={mainRef}
-        className={`p-6 sm:p-10 md:p-16 lg:p-20 flex flex-col items-center transition-all duration-300 scroll-snap-y snap-mandatory`}
+        className="p-6 sm:p-10 md:p-16 flex flex-col items-center"
         style={{
-          scrollBehavior: "smooth",
-          gap: "24px",
-          height: "calc(100vh - 90px)",
           marginLeft: sidebarVisible && !isMobile ? "16rem" : "0",
-          paddingBottom: "30vh",
           overflowY: "auto",
           scrollbarWidth: "none",
-          msOverflowStyle: "none",
         }}
       >
         <style>{`main::-webkit-scrollbar{display:none;}`}</style>
-        {data.map((item, index) => (
-          <div
-            key={index}
-            ref={(el) => (cardRefs.current[index] = el)}
-            className="bg-white shadow-md flex flex-col snap-start"
-            style={{
-              width: isMobile ? "95vw" : "210mm",
-              maxWidth: "95vw",
-              padding: isMobile ? "16px" : "24px",
-              marginBottom: "40px",
-              borderRadius: "0px",
-              boxShadow:
-                "0 4px 10px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.05)",
-              position: "relative",
-              zIndex: 1,
-            }}
-          >
-            <a href={item.postLink} target="_blank" rel="noopener noreferrer">
-              <div
-                className="w-full h-28 flex items-center justify-center cursor-pointer transition-transform duration-300"
-                style={{
-                  backgroundColor: "#fbbf24",
-                  color: "white",
-                  fontSize: "1.6rem",
-                  fontWeight: "bold",
-                  textAlign: "center",
-                  borderRadius: "8px",
-                }}
-              >
-                {item.demoText}
+
+        {/*  Show Skeleton Until Data Loads */}
+        {loading ? (
+          <BlogSkeleton />
+        ) : (
+          data.map((item, index) => (
+            <div
+              key={index}
+              ref={(el) => (cardRefs.current[index] = el)}
+              className="bg-white shadow-md flex flex-col"
+              style={{
+                width: isMobile ? "95vw" : "210mm",
+                padding: isMobile ? "16px" : "24px",
+                marginBottom: "40px",
+              }}
+            >
+              <a href={item.postLink} target="_blank">
+                <div
+                  className="w-full h-28 flex items-center justify-center bg-yellow-400 text-white text-xl font-bold rounded-md"
+                >
+                  {item.demoText}
+                </div>
+              </a>
+
+              <div className="flex flex-col gap-4 mt-4">
+                <h2 className="text-2xl font-bold text-gray-800">{item.heading}</h2>
+
+                <p
+                  className="text-gray-700"
+                  dangerouslySetInnerHTML={{ __html: item.description }}
+                ></p>
               </div>
-            </a>
-            <div className="flex flex-col gap-4 text-justify mt-4 flex-grow">
-              <h2 className="text-2xl font-bold text-gray-800">{item.heading}</h2>
-              <p
-                className="text-gray-700 text-base leading-relaxed whitespace-pre-line"
-                dangerouslySetInnerHTML={{ __html: item.description }}
-              ></p>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </main>
     </div>
   );
