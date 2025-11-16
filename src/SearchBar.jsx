@@ -3,32 +3,65 @@ import { useState, useEffect, useRef } from "react";
 export default function SearchBar({ searchText, setSearchText, onClose }) {
   const [suggestions, setSuggestions] = useState([]);
   const searchRef = useRef(null);
-  const inputRef = useRef(null); // <-- NEW
+  const inputRef = useRef(null);
 
-  // 🔥 Auto-focus when SearchBar opens (Mobile only)
+  const projects = [
+    "All Projects",
+    "HTML Form Project",
+    "CSS Portfolio",
+    "JavaScript MCQZ",
+    "JavaScript ATM",
+    "JavaScript Voting",
+    "JavaScript Binary Number",
+    "MPQP RGPV Exam Q Paper",
+    "Blogs"
+  ];
+
+  const [placeholder, setPlaceholder] = useState("Searching...");
+  const [projIndex, setProjIndex] = useState(0);
+  const [charIndex, setCharIndex] = useState(0);
+
+  // Placeholder typing effect
   useEffect(() => {
-    if (window.innerWidth <= 768 && inputRef.current) {
-      setTimeout(() => {
-        inputRef.current.focus();
-      }, 150); // small delay for smooth keyboard opening
+    if (searchText) return; // typing stops when user types
+
+    const currentProj = projects[projIndex];
+
+    let timeout;
+    if (charIndex <= currentProj.length) {
+      setPlaceholder(currentProj.slice(0, charIndex));
+      timeout = setTimeout(() => setCharIndex(charIndex + 1), 120);
+    } else {
+      timeout = setTimeout(() => {
+        setCharIndex(0);
+        setProjIndex((prev) => (prev + 1) % projects.length);
+      }, 1500); // pause before next project
+    }
+
+    return () => clearTimeout(timeout);
+  }, [charIndex, projIndex, searchText]);
+
+  // Auto-focus input for mobile/tablet
+  useEffect(() => {
+    if (window.innerWidth <= 1024 && inputRef.current) {
+      setTimeout(() => inputRef.current.focus(), 150);
     }
   }, []);
 
-  // Close Searchbar on outside click (Mobile only)
+  // Close on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (window.innerWidth <= 768) {
+      if (window.innerWidth <= 1024) {
         if (searchRef.current && !searchRef.current.contains(e.target)) {
-          onClose(); // hide searchbar
+          onClose();
         }
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [onClose]);
 
-  // Search Suggestions
+  // Suggestions logic
   useEffect(() => {
     if (!searchText) return setSuggestions([]);
 
@@ -72,12 +105,9 @@ export default function SearchBar({ searchText, setSearchText, onClose }) {
     );
   }, [searchText]);
 
-  // Suggestion Click
   const handleSuggestionClick = (el) => {
     if (!el) return;
-
     el.scrollIntoView({ behavior: "smooth", block: "center" });
-
     const bg = el.style.backgroundColor;
     el.style.transition = "background-color 0.3s ease";
     el.style.backgroundColor = "yellow";
@@ -88,24 +118,33 @@ export default function SearchBar({ searchText, setSearchText, onClose }) {
 
     setSearchText("");
     setSuggestions([]);
-    onClose(); // hide searchbar + remove blur
+    onClose();
   };
 
   return (
-    <div ref={searchRef} className="search-bar w-full max-w-lg relative z-50">
+    <div
+      ref={searchRef}
+      className="
+        search-bar relative z-50 w-full mx-auto
+        max-w-[95%]        /* Mobile */
+        sm:max-w-[500px]   /* Small Tablet */
+        md:max-w-[600px]   /* Large Tablet / iPad */
+        lg:max-w-lg        /* Desktop / original width */
+      "
+    >
       <input
-        ref={inputRef} // <-- input auto focus here
+        ref={inputRef}
         type="text"
-        placeholder="Search..."
+        placeholder={placeholder || "Searching..."}
         value={searchText}
         onChange={(e) => setSearchText(e.target.value)}
-        className="w-full px-4 py-2 pr-10 rounded-md text-gray-800 border border-gray-300 focus:border-orange-400 focus:outline-none bg-white"
+        className="w-full px-4 py-2 pr-10 rounded-md text-gray-800 border border-gray-300 focus:border-orange-400 focus:outline-none bg-white placeholder-gray-400 transition"
       />
 
-      {searchText !== "" && (
+      {searchText && (
         <button
           onClick={() => setSearchText("")}
-          className="absolute right-2 top-1/2 -translate-y-1/2 bg-gray-100 text-gray-600 px-2 rounded"
+          className="absolute right-2 top-1/2 -translate-y-1/2 bg-gray-100 text-gray-600 px-2 rounded hover:bg-gray-200 transition"
         >
           X
         </button>
@@ -117,9 +156,9 @@ export default function SearchBar({ searchText, setSearchText, onClose }) {
             <li
               key={i}
               onClick={() => handleSuggestionClick(s.el)}
-              className="px-4 py-2 cursor-pointer hover:bg-gray-100"
+              className="px-4 py-2 cursor-pointer hover:bg-gray-100 transition"
             >
-              {s.text}
+              {s.text.length > 50 ? s.text.slice(0, 50) + "..." : s.text}
             </li>
           ))}
         </ul>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { FiMenu, FiX, FiSearch } from "react-icons/fi";
 import SearchBar from "./SearchBar";
@@ -33,7 +33,6 @@ function Nave() {
         });
       } else setUser(null);
     });
-
     return () => unsubscribe();
   }, []);
 
@@ -59,13 +58,14 @@ function Nave() {
   return (
     <>
       {/* NAVBAR */}
-      <nav className="fixed top-0 left-0 w-full z-50 flex items-center justify-between bg-white/95 backdrop-blur-md shadow-md px-4 md:px-6 py-3 font-[Poppins]">
+      <nav className="fixed top-0 left-0 w-full z-50 flex items-center justify-between bg-white/95 backdrop-blur-md shadow-md/2 px-4 lg:px-6 py-2 font-[Poppins]">
+        {/* Logo */}
         <h2 className="text-2xl font-[Pacifico] text-black tracking-wide">
           AmuleStack
         </h2>
 
-        {/* Desktop Search */}
-        <div className="hidden md:flex flex-1 justify-center relative">
+        {/* Desktop / Large Tablet Search */}
+        <div className="hidden lg:flex flex-1 justify-center relative">
           <SearchBar
             searchText={searchText}
             setSearchText={setSearchText}
@@ -73,17 +73,18 @@ function Nave() {
           />
         </div>
 
-        {/* Desktop Menu */}
-        <div className="hidden md:flex items-center gap-6">
+        {/* Desktop / Large Tablet Menu */}
+        <div className="hidden lg:flex items-center gap-6">
           <ul className="flex gap-6 font-medium">
             {menuItems.map((item) => (
               <li key={item}>
                 <NavLink
                   to={item === "Home" ? "/" : `/${item.toLowerCase()}`}
                   className={({ isActive }) =>
-                    `pb-1 transition-colors duration-200 ${isActive
-                      ? "border-b-2 border-orange-400 text-orange-500"
-                      : "hover:border-b-2 hover:border-orange-400"
+                    `pb-1 transition-all duration-300 ease-in-out ${
+                      isActive
+                        ? "border-b-2 border-orange-400 text-orange-500 scale-105"
+                        : "hover:border-b-2 hover:border-orange-400 hover:scale-105"
                     }`
                   }
                 >
@@ -100,23 +101,23 @@ function Nave() {
           />
         </div>
 
-        {/* Mobile Icons */}
-        <div className="flex items-center gap-4 md:hidden">
+        {/* Mobile + Tablet Icons */}
+        <div className="flex items-center gap-3 lg:hidden">
           <button
             onClick={toggleSearch}
-            className="text-gray-700 text-xl hover:text-orange-500 transition cursor-pointer"
+            className="p-2 rounded-full hover:bg-orange-100 transition-shadow shadow-sm"
           >
-            <FiSearch />
+            <FiSearch className="text-gray-700 text-xl" />
           </button>
 
           <button
             onClick={toggleMenu}
-            className="text-2xl text-gray-700 transition-all duration-300 hover:scale-110"
+            className="p-2 rounded-full hover:bg-orange-100 transition-shadow shadow-sm"
           >
             {menuOpen ? (
-              <FiX className="text-orange-500" />
+              <FiX className="text-orange-500 text-2xl" />
             ) : (
-              <FiMenu className="text-gray-700" />
+              <FiMenu className="text-gray-700 text-2xl" />
             )}
           </button>
         </div>
@@ -125,16 +126,16 @@ function Nave() {
       {/* Blur Overlay */}
       {showSearch && (
         <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden"
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden"
           onClick={() => setShowSearch(false)}
         ></div>
       )}
 
-      {/* Mobile Search Box */}
+      {/* Mobile + Tablet Search Box */}
       {showSearch && (
         <div
           id="mobile-search-box"
-          className="fixed top-16 left-2 right-2 w-[calc(100%-1rem)] z-50 md:hidden bg-white rounded-xl shadow-xl p-3"
+          className="fixed top-16 left-2 right-2 w-[calc(100%-1rem)] z-50 lg:hidden bg-white rounded-xl shadow-lg p-3"
         >
           <SearchBar
             searchText={searchText}
@@ -147,22 +148,20 @@ function Nave() {
       {/* Sidebar Overlay */}
       {menuOpen && (
         <div
-          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 md:hidden"
+          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 lg:hidden"
           onClick={() => setMenuOpen(false)}
         ></div>
       )}
 
-      {/*  SIDE MENU — Navbar ke niche open hoga  */}
+      {/* Mobile + Tablet Sidebar */}
       <div
-        className={`fixed top-14 right-0 h-full w-3/4 sm:w-1/2 bg-white z-50 shadow-2xl border-t border-gray-300 transform duration-500 md:hidden ${menuOpen ? "translate-x-0" : "translate-x-full"
-          }`}
+        className={`fixed top-14 right-0 h-full w-3/4 sm:w-1/2 bg-white z-50 shadow-2xl/20 border-t border-gray-300 transform duration-500 ease-in-out lg:hidden ${
+          menuOpen ? "translate-x-0" : "translate-x-full"
+        }`}
       >
-        {/* TOP ROW */}
-        <div className="flex items-center justify-between px-4 py-4 bg-orange-100 border-b border-orange-300 rounded-bl-xl">
-          <h2 className="text-2xl font-[Pacifico] text-orange-700">
-            AmuleStack
-          </h2>
-
+        {/* Sidebar Top */}
+        <div className="flex items-center justify-between px-4 py-4 bg-orange-50 border-b border-orange-200 rounded-bl-xl">
+          <h2 className="text-2xl font-[Pacifico] text-orange-700">AmuleStack</h2>
           <UserProfile
             user={user}
             onLogout={handleLogout}
@@ -170,7 +169,7 @@ function Nave() {
           />
         </div>
 
-        {/* Menu Links */}
+        {/* Sidebar Menu Links */}
         <ul className="flex flex-col gap-3 w-full px-6 mt-4 font-[Poppins]">
           {menuItems.map((item) => (
             <li key={item}>
@@ -178,9 +177,10 @@ function Nave() {
                 to={item === "Home" ? "/" : `/${item.toLowerCase()}`}
                 onClick={() => setMenuOpen(false)}
                 className={({ isActive }) =>
-                  `block py-3 text-lg transition rounded-lg ${isActive
-                    ? "text-orange-500 bg-orange-50"
-                    : "text-gray-700 hover:bg-gray-100"
+                  `block py-3 text-lg transition-all rounded-lg ${
+                    isActive
+                      ? "text-orange-500 bg-orange-50"
+                      : "text-gray-700 hover:bg-gray-100"
                   }`
                 }
               >

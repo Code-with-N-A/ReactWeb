@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import Projects from "./Projects";
 import FAQSection from "./FAQ";
+import Advtigment from "./adds";
 
 function Home() {
   const skills = ["React", "Node.js", "Express", "MongoDB", "Tailwind CSS", "JavaScript", "HTML", "CSS"];
@@ -121,6 +122,8 @@ function Home() {
           ))}
         </ul>
       </section>
+      {/* advtigment googel seet loding */}
+            <Advtigment/>
 
       {/* ---------- SERVICES ---------- */}
       <section id="services" className="px-6 md:px-16 py-16 bg-white rounded-2xl">
@@ -138,7 +141,6 @@ function Home() {
           ))}
         </div>
       </section>
-
       <Projects />
       <FAQSection/>
     </div>
