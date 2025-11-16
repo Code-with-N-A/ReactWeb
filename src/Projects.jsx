@@ -16,7 +16,7 @@ export default function ProjectShowcase() {
     const [apiError, setApiError] = useState(false);
 
     const SHEET_URL =
-        "";
+        "https://docs.google.com/spreadsheets/d/1LC8UYVdE8hSps5wAgR7DqbRRlh4ofIf2WtYqLenyw6I/export?format=csv";
 
     const preloadImage = (url) => {
         if (!url) return;
@@ -146,10 +146,11 @@ export default function ProjectShowcase() {
                                         setSelectedProject(proj);
                                         setViewAll(false);
                                     }}
-                                    className={`w-full text-left px-3 py-2 rounded-lg mb-2 transition-all ${selectedProject?.id === proj.id && !viewAll
+                                    className={`w-full text-left px-3 py-2 rounded-lg mb-2 transition-all ${
+                                        selectedProject?.id === proj.id && !viewAll
                                             ? "bg-blue-100 text-blue-700 font-semibold"
                                             : "hover:bg-gray-100"
-                                        }`}
+                                    }`}
                                 >
                                     {proj.title}
                                 </button>
@@ -163,7 +164,7 @@ export default function ProjectShowcase() {
                     - sm: auto height (so no inner card scroll; page scrolls)
                 */}
                 <div className="flex-1 md:h-[95vh] overflow-y-auto p-4 md:p-6 bg-[#FFF] rounded-xl hide-scrollbar">
-
+                    
                     {viewAll ? (
                         <motion.div
                             className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
