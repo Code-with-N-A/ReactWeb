@@ -18,6 +18,7 @@ export default function ProjectShowcase() {
     const SHEET_URL =
         "https://docs.google.com/spreadsheets/d/1LC8UYVdE8hSps5wAgR7DqbRRlh4ofIf2WtYqLenyw6I/export?format=csv";
 
+    // Optimized preload — only current + next + prev
     const preloadImage = (url) => {
         if (!url) return;
         if (!imageCache[url]) {
@@ -35,7 +36,7 @@ export default function ProjectShowcase() {
                 setProjects(projectCache);
                 setSelectedProject(projectCache[0]);
                 setLoading(false);
-                projectCache.forEach((p) => preloadImage(p.image));
+                preloadNearbyImages(0, projectCache);
                 return;
             }
 
@@ -46,7 +47,7 @@ export default function ProjectShowcase() {
                 setProjects(fromStorage);
                 setSelectedProject(fromStorage[0]);
                 setLoading(false);
-                fromStorage.forEach((p) => preloadImage(p.image));
+                preloadNearbyImages(0, fromStorage);
                 return;
             }
 
@@ -74,14 +75,20 @@ export default function ProjectShowcase() {
 
             setProjects(formatted);
             setSelectedProject(formatted[0]);
-
-            formatted.forEach((p) => preloadImage(p.image));
+            preloadNearbyImages(0, formatted);
             setLoading(false);
         } catch (err) {
             console.error("Error:", err);
             setApiError(true);
             setLoading(false);
         }
+    };
+
+    // Preload selected + prev + next images
+    const preloadNearbyImages = (index, arr) => {
+        [index - 1, index, index + 1].forEach((i) => {
+            if (i >= 0 && i < arr.length) preloadImage(arr[i].image);
+        });
     };
 
     useEffect(() => {
@@ -98,6 +105,14 @@ export default function ProjectShowcase() {
     useEffect(() => {
         if (isMobile) setViewAll(true);
     }, [isMobile]);
+
+    // When selected project changes, preload nearby images
+    useEffect(() => {
+        if (selectedProject && projects.length > 0) {
+            const idx = projects.findIndex((p) => p.id === selectedProject.id);
+            preloadNearbyImages(idx, projects);
+        }
+    }, [selectedProject]);
 
     if (loading)
         return (
@@ -117,13 +132,8 @@ export default function ProjectShowcase() {
 
     return (
         <>
-            {/* NOTE:
-                - On small screens: container height = auto (page scrolls naturally)
-                - On md+ screens: fixed 95vh so left + right align
-            */}
             <div className="flex flex-col md:flex-row md:h-[95vh] bg-[#FFF] text-gray-800 overflow-hidden py-4 md:py-6 px-2 md:px-6">
 
-                {/* LEFT SIDEBAR: fixed height only on md+ */}
                 {!isMobile && (
                     <div className="md:w-1/4 bg-white shadow-md p-4 flex flex-col rounded-xl overflow-hidden mx-1 my-2 md:h-[95vh]">
                         <h2 className="text-xl font-bold mb-4 text-blue-600 text-center">
@@ -137,7 +147,6 @@ export default function ProjectShowcase() {
                             All Projects
                         </button>
 
-                        {/* This list scrolls independently if it grows, but within sidebar */}
                         <div className="flex-1 overflow-y-auto pr-2 hide-scrollbar">
                             {projects.map((proj) => (
                                 <button
@@ -159,10 +168,6 @@ export default function ProjectShowcase() {
                     </div>
                 )}
 
-                {/* RIGHT CONTENT:
-                    - md+: fixed height with internal scroll
-                    - sm: auto height (so no inner card scroll; page scrolls)
-                */}
                 <div className="flex-1 md:h-[95vh] overflow-y-auto p-4 md:p-6 bg-[#FFF] rounded-xl hide-scrollbar">
                     
                     {viewAll ? (
@@ -177,9 +182,7 @@ export default function ProjectShowcase() {
                                     whileHover={{ scale: 1.02 }}
                                     className="bg-white shadow-lg rounded-2xl overflow-visible hover:shadow-xl transition-all"
                                 >
-                                    {/* outer padding so image sits inside card */}
                                     <div className="p-3 bg-white">
-                                        {/* responsive image box — ensures cover on all sizes */}
                                         <div className="w-full h-40 md:h-48 lg:h-52 overflow-hidden rounded-lg bg-gray-100">
                                             <img
                                                 src={proj.image}
@@ -189,13 +192,11 @@ export default function ProjectShowcase() {
                                         </div>
                                     </div>
 
-                                    {/* card content with slightly larger padding; no fixed height */}
                                     <div className="p-5">
                                         <h3 className="text-lg font-bold mb-2 text-gray-700">
                                             {proj.title}
                                         </h3>
 
-                                        {/* limit lines to 3 so cards don't grow too tall on mobile */}
                                         <p className="text-sm text-gray-600 mb-3 line-clamp-3">
                                             {proj.description}
                                         </p>

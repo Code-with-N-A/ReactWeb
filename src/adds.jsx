@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Papa from "papaparse";
 import { motion } from "framer-motion";
 
@@ -11,16 +11,45 @@ export default function AdvtigmentNews() {
   const [currentPage, setCurrentPage] = useState(0);
 
   // --------------------------
-  //   PRELOAD IMAGE FUNCTION
+  //   PRELOAD IMAGE FUNCTION (Partial) 
   // --------------------------
   const preloadImage = (url) => {
     if (!url) return;
-
     if (!imageCache[url]) {
       const img = new Image();
       img.src = url;
       imageCache[url] = img; // store image
     }
+  };
+
+  const preloadNearbyImages = (pageIndex) => {
+    preloadImage(data[pageIndex]?.img);
+    preloadImage(data[pageIndex + 1]?.img);
+    preloadImage(data[pageIndex - 1]?.img);
+  };
+
+  // --------------------------
+  //   EXTRACT LINKS
+  // --------------------------
+  const extractLinks = (text) => {
+    const urlRegex =
+      /(https?:\/\/[^\s<]+|www\.[^\s<]+|data:image\/[a-zA-Z]+;base64,[^\s<]+|https?:\/\/.*\.(mp4|webm|ogg|mov|avi))/gi;
+    const links = [];
+    let cleanedText = text;
+    let match;
+    while ((match = urlRegex.exec(text)) !== null) {
+      const url = match[0];
+      cleanedText = cleanedText.replace(url, "").trim();
+
+      if (url.startsWith("data:image") || url.match(/\.(jpg|jpeg|png|gif|svg)$/i)) {
+        links.push({ url, type: "Image" });
+      } else if (url.match(/\.(mp4|webm|ogg|mov|avi)$/i)) {
+        links.push({ url, type: "Video" });
+      } else {
+        links.push({ url, type: "Link" });
+      }
+    }
+    return { cleanedText, links };
   };
 
   // --------------------------
@@ -31,7 +60,7 @@ export default function AdvtigmentNews() {
       if (newsCache) {
         setData(newsCache);
         setLoading(false);
-        newsCache.forEach((item) => preloadImage(item.img));
+        preloadNearbyImages(0); // preload first few images only
         return;
       }
 
@@ -48,19 +77,22 @@ export default function AdvtigmentNews() {
       ).padStart(2, "0")}/${today.getFullYear().toString().slice(-2)}`;
 
       const formatted = parsed.data
-        .map((row) => ({
-          heading: row.Heading?.trim() || "No Heading",
-          description: row.Description?.trim() || "No Description",
-          img: row.IMG?.trim() || "",
-          date: dateStr,
-        }))
+        .map((row) => {
+          const descRaw = row.Description?.trim() || "No Description";
+          const { cleanedText, links } = extractLinks(descRaw);
+          return {
+            heading: row.Heading?.trim() || "No Heading",
+            description: cleanedText,
+            links,
+            img: row.IMG?.trim() || "",
+            date: dateStr,
+          };
+        })
         .reverse();
 
       newsCache = formatted;
       setData(formatted);
-
-      formatted.forEach((item) => preloadImage(item.img));
-
+      preloadNearbyImages(0); // preload first few images only
       setLoading(false);
     } catch (err) {
       console.error("Loading error:", err);
@@ -72,13 +104,49 @@ export default function AdvtigmentNews() {
     fetchData();
   }, []);
 
-  const nextPage = () =>
-    currentPage < data.length - 1 && setCurrentPage((p) => p + 1);
+  const nextPage = () => {
+    if (currentPage < data.length - 1) {
+      setCurrentPage((p) => {
+        const next = p + 1;
+        preloadNearbyImages(next);
+        return next;
+      });
+    }
+  };
 
-  const prevPage = () =>
-    currentPage > 0 && setCurrentPage((p) => p - 1);
+  const prevPage = () => {
+    if (currentPage > 0) {
+      setCurrentPage((p) => {
+        const prev = p - 1;
+        preloadNearbyImages(prev);
+        return prev;
+      });
+    }
+  };
 
   const item = data[currentPage];
+
+  // Memoize links list to avoid re-rendering unnecessarily
+  const linksList = useMemo(() => {
+    if (!item) return null;
+    return item.links.map((link, idx) => {
+      let bgColor = "bg-blue-100 text-blue-800";
+      if (link.type === "Image") bgColor = "bg-green-100 text-green-800";
+      if (link.type === "Video") bgColor = "bg-red-100 text-red-800";
+
+      return (
+        <a
+          key={idx}
+          href={link.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`${bgColor} px-3 py-1 rounded font-semibold text-sm`}
+        >
+          {link.type}
+        </a>
+      );
+    });
+  }, [item]);
 
   return (
     <div className="flex flex-col items-center bg-white h-auto py-4 px-3">
@@ -111,22 +179,27 @@ export default function AdvtigmentNews() {
                   object-contain
                   p-1
                 "
-                loading="eager"
+                loading="lazy"
               />
             </div>
           </div>
 
           {/* RIGHT TEXT */}
           <div className="flex-1 p-6 flex flex-col justify-between">
-
             <div className="flex flex-col gap-3">
               <h2 className="font-bold text-2xl md:text-3xl text-black leading-tight break-words">
                 {item.heading}
               </h2>
 
+              {/* DESCRIPTION */}
               <p className="text-gray-700 text-base md:text-lg leading-relaxed break-words">
                 {item.description}
               </p>
+
+              {/* LINKS LIST */}
+              {item.links.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-4">{linksList}</div>
+              )}
             </div>
 
             {/* FOOTER BUTTONS */}
@@ -163,7 +236,6 @@ export default function AdvtigmentNews() {
                 </button>
               </div>
             </div>
-
           </div>
         </motion.div>
       )}

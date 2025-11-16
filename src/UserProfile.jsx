@@ -45,7 +45,7 @@ export default function UserProfile({ user, onLogout, sidebarClose }) {
           {!user ? (
             <>
               <h3 className="text-lg font-semibold text-gray-900">
-                Welcome 👋
+                Welcome
               </h3>
               <p className="text-sm text-gray-600 leading-5">
                 Login or create an account to access your profile, settings, and more.
