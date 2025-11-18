@@ -3,8 +3,12 @@ import Papa from "papaparse";
 
 // In-memory cache
 let blogsCache = null;
+let cacheTime = null;
 
-//  Skeleton Shimmer Component (NO IMPORT NEEDED)
+// 10 minutes cache time
+const CACHE_EXPIRY = 10 * 60 * 1000;
+
+// Skeleton
 function BlogSkeleton() {
   return (
     <div className="flex flex-col items-center w-full mt-6 animate-pulse">
@@ -14,7 +18,6 @@ function BlogSkeleton() {
           className="bg-white shadow-md w-[210mm] max-w-[95vw] p-6 mb-10 rounded-md"
         >
           <div className="w-full h-28 rounded-md mb-4 bg-gray-300"></div>
-
           <div className="h-6 bg-gray-300 rounded mb-3 w-3/4"></div>
           <div className="h-4 bg-gray-300 rounded mb-2 w-full"></div>
           <div className="h-4 bg-gray-300 rounded mb-2 w-5/6"></div>
@@ -27,13 +30,13 @@ function BlogSkeleton() {
 
 function Blogs() {
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true); // ⬅ NEW
+  const [loading, setLoading] = useState(true);
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const cardRefs = useRef([]);
   const mainRef = useRef(null);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Detect mobile screen
+  // Detect mobile
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 1024;
@@ -41,12 +44,15 @@ function Blogs() {
       setSidebarVisible(!mobile);
     };
     handleResize();
+
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Convert text links into buttons
+  // Convert URLs inside description into styled buttons
   const makeLinksClickable = (text) => {
+    if (!text) return "";
+
     const urlRegex =
       /(https?:\/\/[^\s<]+|www\.[^\s<]+|data:image\/[a-zA-Z]+;base64,[^\s<]+)/gi;
 
@@ -54,8 +60,8 @@ function Blogs() {
       const safeUrl = url.startsWith("http")
         ? url
         : url.startsWith("data:")
-          ? url
-          : "https://" + url;
+        ? url
+        : "https://" + url;
 
       if (url.startsWith("data:image")) {
         return `<a href="#" onclick="(function(){
@@ -68,73 +74,76 @@ function Blogs() {
           newTab.document.body.style.background='#f0f0f0';
           newTab.document.body.appendChild(img);
         })(); return false;"
-        style="background-color:#d1ecff;color:#0369a1;text-decoration:none;padding:2px 6px;border-radius:4px;">Link Click</a>`;
+        style="background-color:#d1ecff;color:#0369a1;text-decoration:none;padding:2px 6px;border-radius:4px;">Image</a>`;
       }
 
       return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer"
-      style="background-color:#d1ecff;color:#0369a1;text-decoration:none;padding:2px 6px;border-radius:4px;">Link Click</a>`;
+      style="background-color:#d1ecff;color:#0369a1;text-decoration:none;padding:2px 6px;border-radius:4px;">Open</a>`;
     });
   };
 
-  // Fetch CSV + Cache
+  // Fetch CSV (fixed)
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Memory cache
-        if (blogsCache) {
+        const now = Date.now();
+
+        // ✔ If memory cache fresh → use it
+        if (blogsCache && cacheTime && now - cacheTime < CACHE_EXPIRY) {
           setData(blogsCache);
           setLoading(false);
           return;
         }
 
-        // LocalStorage cache
-        const stored = localStorage.getItem("blogsData");
-        if (stored) {
-          const parsedStored = JSON.parse(stored);
-          blogsCache = parsedStored;
-          setData(parsedStored);
-          setLoading(false);
-          return;
-        }
-
-        // Live fetch
+        // ✔ Fetch fresh API data
         const response = await fetch(
           "https://docs.google.com/spreadsheets/d/1tEQKsVOcB58VleOgFuKWy-PTuv1R9MMG1dVRzcQfAOk/export?format=csv&gid=670473458"
         );
 
         const csvText = await response.text();
-        const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true });
+        const parsed = Papa.parse(csvText, {
+          header: true,
+          skipEmptyLines: true,
+        });
 
         const today = new Date();
-        const dateStr = `${String(today.getDate()).padStart(2, "0")}/${String(
-          today.getMonth() + 1
-        ).padStart(2, "0")}/${today.getFullYear().toString().slice(-2)}`;
+        const dateStr = `${String(today.getDate()).padStart(
+          2,
+          "0"
+        )}/${String(today.getMonth() + 1).padStart(
+          2,
+          "0"
+        )}/${today.getFullYear().toString().slice(-2)}`;
 
         const formatted = parsed.data.map((row) => {
-          const words = row.Heading.split(" ");
+          const heading = row.Heading || "";
+          const desc = row.Description || "";
+
           return {
-            heading: row.Heading,
-            description: makeLinksClickable(row.Description.replace(/\n/g, "<br/>")),
-            postLink: row.POST,
-            demoText: words.slice(0, 3).join(" "),
+            heading,
+            description: makeLinksClickable(desc.replace(/\n/g, "<br/>")),
+            postLink: row.POST || "#",
+            demoText: heading.split(" ").slice(0, 3).join(" "),
             date: dateStr,
           };
         });
 
+        // ✔ Save new data in cache
         blogsCache = formatted;
-        localStorage.setItem("blogsData", JSON.stringify(formatted));
+        cacheTime = now;
+
         setData(formatted);
       } catch (err) {
-        console.error("Error:", err);
+        console.error("Fetch Error:", err);
       }
 
       setLoading(false);
     };
 
-    setTimeout(loadData, 500); // Slow effect 0.5s (Google like)
+    loadData();
   }, []);
 
-  // Scroll
+  // Scroll to card
   const scrollToCard = (index) => {
     if (cardRefs.current[index]) {
       cardRefs.current[index].scrollIntoView({ behavior: "smooth" });
@@ -148,8 +157,9 @@ function Blogs() {
     >
       {/* Sidebar */}
       <aside
-        className={`fixed transition-all duration-500 ${sidebarVisible ? "w-64 opacity-100" : "w-0 opacity-0"
-          } border-r border-gray-300 bg-white`}
+        className={`fixed transition-all duration-500 ${
+          sidebarVisible ? "w-64 opacity-100" : "w-0 opacity-0"
+        } border-r border-gray-300 bg-white`}
         style={{
           top: "68px",
           height: "calc(100vh - 75px)",
@@ -159,11 +169,13 @@ function Blogs() {
       >
         <style>{`aside::-webkit-scrollbar{display:none;}`}</style>
 
-        {/* Sidebar Skeleton */}
         {loading ? (
           <div className="p-4 animate-pulse">
             {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="h-10 w-full bg-gray-300 rounded mb-4"></div>
+              <div
+                key={i}
+                className="h-10 w-full bg-gray-300 rounded mb-4"
+              ></div>
             ))}
           </div>
         ) : (
@@ -179,8 +191,12 @@ function Blogs() {
                   onClick={() => scrollToCard(index)}
                   className="flex flex-col text-gray-700 hover:text-blue-600 cursor-pointer p-2 rounded-md bg-cyan-50"
                 >
-                  <span className="font-bold">{index + 1}. {item.demoText}</span>
-                  <span className="text-xs text-gray-500 ml-6">{item.date}</span>
+                  <span className="font-bold">
+                    {index + 1}. {item.demoText}
+                  </span>
+                  <span className="text-xs text-gray-500 ml-6">
+                    {item.date}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -216,7 +232,6 @@ function Blogs() {
       >
         <style>{`main::-webkit-scrollbar{display:none;}`}</style>
 
-        {/*  Show Skeleton Until Data Loads */}
         {loading ? (
           <BlogSkeleton />
         ) : (
@@ -232,19 +247,21 @@ function Blogs() {
               }}
             >
               <a href={item.postLink} target="_blank">
-                <div
-                  className="w-full h-28 flex items-center justify-center bg-yellow-400 text-white text-xl font-bold rounded-md"
-                >
+                <div className="w-full h-28 flex items-center justify-center bg-yellow-400 text-white text-xl font-bold rounded-md">
                   {item.demoText}
                 </div>
               </a>
 
               <div className="flex flex-col gap-4 mt-4">
-                <h2 className="text-2xl font-bold text-gray-800">{item.heading}</h2>
+                <h2 className="text-2xl font-bold text-gray-800">
+                  {item.heading}
+                </h2>
 
                 <p
                   className="text-gray-700"
-                  dangerouslySetInnerHTML={{ __html: item.description }}
+                  dangerouslySetInnerHTML={{
+                    __html: item.description,
+                  }}
                 ></p>
               </div>
             </div>
