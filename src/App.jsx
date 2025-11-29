@@ -8,7 +8,6 @@ import SocialLinks from "./Sosalm";
 import Footer from "./Footer";
 import Blogs from "./Blogs";
 import Signup from "./Signup";
-import Login from "./Login";
 import ProtectedRoute from "./ProtectedRoute";
 
 function App() {
@@ -46,7 +45,6 @@ function App() {
         />
 
         <Route path="/signup" element={<Signup />} />
-        <Route path="/login" element={<Login />} />
 
         <Route path="*" element={<Home />} />
       </Routes>
