@@ -6,6 +6,7 @@ import {
   fetchSignInMethodsForEmail,
   onAuthStateChanged,
   GithubAuthProvider,
+  deleteUser,
 } from "firebase/auth";
 import { auth, googleProvider, githubProvider } from "./firebase";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -52,8 +53,16 @@ export default function Auth() {
   };
 
   const handleAuth = async () => {
+    if (loading) return; // Prevent multiple requests
     if (!email || !password) {
       showNotification("Please enter both email and password", "error");
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      showNotification("Please enter a valid email address", "error");
       return;
     }
 
@@ -83,7 +92,7 @@ export default function Auth() {
         setTimeout(() => navigate(from, { replace: true }), 2000);
       }
     } catch (error) {
-      let errorMessage = "Something went wrong!";
+      let errorMessage = isSignup ? "Signup failed. Please try again." : "Login failed. Please try again.";
       if (isSignup) {
         switch (error.code) {
           case "auth/invalid-email":
@@ -91,6 +100,9 @@ export default function Auth() {
             break;
           case "auth/weak-password":
             errorMessage = "Password must be at least 6 characters";
+            break;
+          case "auth/email-already-in-use":
+            errorMessage = "This email is already registered";
             break;
         }
       } else {
@@ -104,6 +116,9 @@ export default function Auth() {
           case "auth/invalid-email":
             errorMessage = "Invalid email address";
             break;
+          case "auth/too-many-requests":
+            errorMessage = "Too many failed attempts. Please try again later.";
+            break;
         }
       }
       showNotification(errorMessage, "error");
@@ -113,20 +128,63 @@ export default function Auth() {
   };
 
   const handleGoogleAuth = async () => {
+    if (loading) return; // Prevent multiple requests
     setLoading(true);
     setMsg({ text: "", type: "" });
     setShowMsg(false);
     setProgress(0);
     try {
       const result = await signInWithPopup(auth, googleProvider);
-      const userEmail = result.user.email;
+      const user = result.user;
+      const isNewUser = result.additionalUserInfo.isNewUser;
 
-      const methods = await fetchSignInMethodsForEmail(auth, userEmail);
+      if (!user.email) {
+        showNotification("Unable to retrieve email from Google. Please try again or use email/password.", "error");
+        if (isNewUser) {
+          try {
+            await deleteUser(user);
+          } catch (deleteError) {
+            console.error("Failed to delete user:", deleteError);
+          }
+        }
+        return;
+      }
+
+      if (isSignup && !isNewUser) {
+        showNotification("This account already exists. Please sign in instead.", "error");
+        return;
+      }
+
+      if (!isSignup && isNewUser) {
+        showNotification("No account found with this email. Please sign up first.", "error");
+        try {
+          await deleteUser(user);
+        } catch (deleteError) {
+          console.error("Failed to delete user:", deleteError);
+        }
+        return;
+      }
+
       showNotification(`${isSignup ? "Signup" : "Login"} with Google successful! Redirecting...`, "success");
 
       setTimeout(() => navigate(from, { replace: true }), 2000);
     } catch (error) {
-      showNotification("Google authentication failed", "error");
+      let errorMessage = "Google authentication failed. Please try again.";
+      switch (error.code) {
+        case "auth/popup-blocked":
+          errorMessage = "Popup was blocked. Please allow popups and try again.";
+          break;
+        case "auth/popup-closed-by-user":
+          errorMessage = "Authentication was cancelled. Please try again.";
+          break;
+        case "auth/cancelled-popup-request":
+          errorMessage = "Authentication request was cancelled. Please try again.";
+          break;
+        case "auth/account-exists-with-different-credential":
+          errorMessage = "An account already exists with a different sign-in method. Please use the original method.";
+          break;
+      }
+      showNotification(errorMessage, "error");
       console.error(error);
     } finally {
       setLoading(false);
@@ -134,20 +192,63 @@ export default function Auth() {
   };
 
   const handleGitHubAuth = async () => {
+    if (loading) return; // Prevent multiple requests
     setLoading(true);
     setMsg({ text: "", type: "" });
     setShowMsg(false);
     setProgress(0);
     try {
       const result = await signInWithPopup(auth, githubProvider);
-      const userEmail = result.user.email;
+      const user = result.user;
+      const isNewUser = result.additionalUserInfo.isNewUser;
 
-      const methods = await fetchSignInMethodsForEmail(auth, userEmail);
+      if (!user.email) {
+        showNotification("Unable to retrieve email from GitHub. Please make your email public in GitHub settings or use email/password.", "error");
+        if (isNewUser) {
+          try {
+            await deleteUser(user);
+          } catch (deleteError) {
+            console.error("Failed to delete user:", deleteError);
+          }
+        }
+        return;
+      }
+
+      if (isSignup && !isNewUser) {
+        showNotification("This account already exists. Please sign in instead.", "error");
+        return;
+      }
+
+      if (!isSignup && isNewUser) {
+        showNotification("No account found with this email. Please sign up first.", "error");
+        try {
+          await deleteUser(user);
+        } catch (deleteError) {
+          console.error("Failed to delete user:", deleteError);
+        }
+        return;
+      }
+
       showNotification(`${isSignup ? "Signup" : "Login"} with GitHub successful! Redirecting...`, "success");
 
       setTimeout(() => navigate(from, { replace: true }), 2000);
     } catch (error) {
-      showNotification("GitHub authentication failed", "error");
+      let errorMessage = "GitHub authentication failed. Please try again.";
+      switch (error.code) {
+        case "auth/popup-blocked":
+          errorMessage = "Popup was blocked. Please allow popups and try again.";
+          break;
+        case "auth/popup-closed-by-user":
+          errorMessage = "Authentication was cancelled. Please try again.";
+          break;
+        case "auth/cancelled-popup-request":
+          errorMessage = "Authentication request was cancelled. Please try again.";
+          break;
+        case "auth/account-exists-with-different-credential":
+          errorMessage = "An account already exists with a different sign-in method. Please use the original method.";
+          break;
+      }
+      showNotification(errorMessage, "error");
       console.error(error);
     } finally {
       setLoading(false);
@@ -187,7 +288,7 @@ export default function Auth() {
       )}
 
       {/* Auth Card */}
-      <div className="relative w-full max-w-sm bg-white rounded-2xl p-6 shadow-xl border border-gray-100 z-10">
+      <div className="relative w-full max-w-sm bg-white p-6 shadow-xl border border-gray-100 z-10">
         {/* Header */}
         <div className="text-center mb-6">
           <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full mx-auto mb-3 flex items-center justify-center">
@@ -206,7 +307,7 @@ export default function Auth() {
           <div className="bg-gray-100 p-1 rounded-lg flex w-full">
             <button
               onClick={() => setIsSignup(true)}
-              className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${
+              className={`flex-1 py-2 rounded-md text-sm font-medium transition-all cursor-pointer ${
                 isSignup ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
               }`}
             >
@@ -214,7 +315,7 @@ export default function Auth() {
             </button>
             <button
               onClick={() => setIsSignup(false)}
-              className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${
+              className={`flex-1 py-2 rounded-md text-sm font-medium transition-all cursor-pointer ${
                 !isSignup ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
               }`}
             >
@@ -247,7 +348,7 @@ export default function Auth() {
           <button
             onClick={handleAuth}
             disabled={loading}
-            className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-2 rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md text-sm"
+            className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-2 rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md text-sm cursor-pointer"
           >
             {loading ? (
               <div className="flex items-center justify-center gap-2">
@@ -272,19 +373,37 @@ export default function Auth() {
             <button
               onClick={handleGitHubAuth}
               disabled={loading}
-              className="flex items-center justify-center gap-2 py-2 px-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              className="flex items-center justify-center gap-2 py-2 px-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm cursor-pointer"
             >
-              <img src="https://github.githubassets.com/images/modules/site/icons/footer/github-mark.svg" className="w-4 h-4" />
-              GitHub
+              {loading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-3 h-3 border-2 border-gray-700 border-t-transparent rounded-full animate-spin"></div>
+                  Loading...
+                </div>
+              ) : (
+                <>
+                  <img src="https://github.githubassets.com/images/modules/site/icons/footer/github-mark.svg" className="w-4 h-4" />
+                  GitHub
+                </>
+              )}
             </button>
 
             <button
               onClick={handleGoogleAuth}
               disabled={loading}
-              className="flex items-center justify-center gap-2 py-2 px-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              className="flex items-center justify-center gap-2 py-2 px-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm cursor-pointer"
             >
-              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-4 h-4" />
-              Google
+              {loading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-3 h-3 border-2 border-gray-700 border-t-transparent rounded-full animate-spin"></div>
+                  Loading...
+                </div>
+              ) : (
+                <>
+                  <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-4 h-4" />
+                  Google
+                </>
+              )}
             </button>
           </div>
         </div>
