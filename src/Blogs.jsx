@@ -261,7 +261,7 @@ export default function AmuleStackSearch() {
 
      // {/* Top background section */}
       <div
-        className="w-full pb-20 pt-18 bg-gradient-to-r from-blue-900 to-purple-900 relative"
+        className="w-full pb-6 pt-15 bg-gradient-to-r from-blue-900 to-purple-900 relative"
       >
         {/* Light transparent overlay (NO BLUR) */}
         <div className="absolute inset-0 bg-white/20"></div>
@@ -272,7 +272,7 @@ export default function AmuleStackSearch() {
           <div className="relative w-full">
             {/* Search Bar */}
             <div
-              className="flex items-center shadow-md px-3 py-2 bg-white rounded-md
+              className="flex items-center shadow-md px-3 py-3 bg-white
 transition-all duration-200 focus-within:shadow-lg relative"
             >
 
@@ -283,7 +283,7 @@ transition-all duration-200 focus-within:shadow-lg relative"
 
               <input
                 className="flex-1 px-3 outline-none text-lg bg-transparent tracking-wide text-gray-800 pr-10"
-                placeholder="Search anything..."
+                placeholder="Search Anything Blogs..."
                 value={typingText}
                 onChange={(e) => {
                   setTypingText(e.target.value);
@@ -305,8 +305,7 @@ transition-all duration-200 focus-within:shadow-lg relative"
                 </button>
               )}
             </div>
-
-
+        
             {/* Suggestions */}
             {suggestions.length > 0 && (
               <div
@@ -364,9 +363,9 @@ transition-all duration-200 focus-within:shadow-lg relative"
                   className="w-full h-38 object-cover mb-5 border border-gray-200 cursor-pointer"
                   onClick={() => toggleZoom(item["Img URL"] || PLACEHOLDER)}
                 />
-                <h2 className="text-2xl font-semibold text-gray-900 mb-3 leading-snug">
+                <h3 className="text-1xl font-semibold text-gray-900 mb-3 leading-snug">
                   {item.Heading}
-                </h2>
+                </h3>
                 <p className="text-gray-600 text-base mb-6 line-clamp-3 flex-grow overflow-hidden">
                   {item.Description}
                 </p>
@@ -446,9 +445,9 @@ transition-all duration-200 focus-within:shadow-lg relative"
                       className="w-full h-38 object-cover mb-5 border border-gray-200 cursor-pointer"
                       onClick={() => toggleZoom(item["Img URL"] || PLACEHOLDER)}
                     />
-                    <h2 className="text-2xl font-semibold text-gray-900 mb-3 leading-snug">
+                    <h3 className="text-1xl font-semibold text-gray-900 mb-3 leading-snug">
                       {item.Heading}
-                    </h2>
+                    </h3>
                     <p className="text-gray-600 text-base mb-6 line-clamp-3 flex-grow overflow-hidden">
                       {item.Description}
                     </p>
