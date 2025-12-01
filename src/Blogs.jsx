@@ -8,7 +8,7 @@ const PLACEHOLDER =
 
 const AmuleStackLogo = () => (
   <svg
-    className="w-8 h-8 text-gray-500"
+    className="w-6 h-6 text-gray-500"
     viewBox="0 0 24 24"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
@@ -259,16 +259,12 @@ export default function AmuleStackSearch() {
   return (
     <div className="min-h-screen bg-gray-#FFF pb-20">
 
-      {/* Top background section */}
+     // {/* Top background section */}
       <div
-        className="w-full pb-50 pt-18 bg-cover bg-center bg-no-repeat relative"
-        style={{
-          backgroundImage:
-            "url('https://enhancedrivingschool.com/wp-content/uploads/2025/02/blog-banner.jpg')",
-        }}
+        className="w-full pb-20 pt-18 bg-gradient-to-r from-blue-900 to-purple-900 relative"
       >
         {/* Light transparent overlay (NO BLUR) */}
-        <div className="absolute inset-0 bg-white/40"></div>
+        <div className="absolute inset-0 bg-white/20"></div>
 
         {/* Content Wrapper */}
         <div className="relative w-full max-w-3xl mx-auto px-4">
@@ -276,8 +272,8 @@ export default function AmuleStackSearch() {
           <div className="relative w-full">
             {/* Search Bar */}
             <div
-              className="flex items-center shadow-md px-4 py-3 bg-white rounded-md
-  transition-all duration-200 focus-within:shadow-lg"
+              className="flex items-center shadow-md px-3 py-2 bg-white rounded-md
+transition-all duration-200 focus-within:shadow-lg relative"
             >
 
               {/* Left Logo */}
@@ -286,7 +282,7 @@ export default function AmuleStackSearch() {
               </div>
 
               <input
-                className="flex-1 px-3 outline-none text-lg bg-transparent tracking-wide text-gray-800"
+                className="flex-1 px-3 outline-none text-lg bg-transparent tracking-wide text-gray-800 pr-10"
                 placeholder="Search anything..."
                 value={typingText}
                 onChange={(e) => {
@@ -297,31 +293,32 @@ export default function AmuleStackSearch() {
                 aria-label="Search input"
               />
 
-              {/* Clear Button */}
+              {/* Clear Button - now positioned absolutely on the right */}
               {typingText && (
                 <button
                   onClick={handleClear}
                   aria-label="Clear search"
                   title="Clear search"
-                  className="ml-3 flex items-center justify-center hover:scale-110 transition-transform"
+                  className="absolute right-3 flex items-center justify-center hover:scale-110 transition-transform"
                 >
                   <ClearIcon />
                 </button>
               )}
             </div>
 
+
             {/* Suggestions */}
             {suggestions.length > 0 && (
               <div
                 className="absolute left-0 right-0 w-full bg-white rounded-xl shadow-lg mt-3 z-30 
-        max-h-72 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100"
+    max-h-72 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100"
                 style={{ minWidth: "100%" }}
               >
                 {suggestions.map((s) => (
                   <div
                     key={s._id}
                     className="px-5 py-3 cursor-pointer hover:bg-gray-100 flex items-center gap-3 select-none
-              transition-colors duration-150"
+          transition-colors duration-150"
                     onClick={() => handleSuggestionClick(s)}
                   >
                     <AmuleStackLogo />
@@ -373,12 +370,12 @@ export default function AmuleStackSearch() {
                 <p className="text-gray-600 text-base mb-6 line-clamp-3 flex-grow overflow-hidden">
                   {item.Description}
                 </p>
-                <div className="flex gap-4 mt-auto">
+                <div className="flex justify-between mt-auto">
                   <a
                     href={item["Linkedin English"]}
                     target="_blank"
                     rel="noreferrer"
-                    className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors duration-300 shadow-md"
+                    className="bg-blue-600 text-white px-5 py-2 text-sm font-semibold hover:bg-blue-700 transition-colors duration-300 shadow-md"
                   >
                     English
                   </a>
@@ -386,7 +383,7 @@ export default function AmuleStackSearch() {
                     href={item["Link Hinglish"]}
                     target="_blank"
                     rel="noreferrer"
-                    className="bg-green-600 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors duration-300 shadow-md"
+                    className="bg-green-600 text-white px-5 py-2 text-sm font-semibold hover:bg-green-700 transition-colors duration-300 shadow-md"
                   >
                     Hinglish
                   </a>
@@ -455,12 +452,12 @@ export default function AmuleStackSearch() {
                     <p className="text-gray-600 text-base mb-6 line-clamp-3 flex-grow overflow-hidden">
                       {item.Description}
                     </p>
-                    <div className="flex gap-4 mt-auto">
+                    <div className="flex justify-between mt-auto">
                       <a
                         href={item["Linkedin English"]}
                         target="_blank"
                         rel="noreferrer"
-                        className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors duration-300 shadow-md"
+                        className="bg-blue-600 text-white px-5 py-2 text-sm font-semibold hover:bg-blue-700 transition-colors duration-300 shadow-md"
                       >
                         English
                       </a>
@@ -468,11 +465,9 @@ export default function AmuleStackSearch() {
                         href={item["Link Hinglish"]}
                         target="_blank"
                         rel="noreferrer"
-                        className="bg-green-600 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors duration-300 shadow-md"
+                        className="bg-green-600 text-white px-5 py-2 text-sm font-semibold hover:bg-green-700 transition-colors duration-300 shadow-md"
                       >
                         Hinglish
-
-
                       </a>
                     </div>
                   </article>
@@ -484,26 +479,28 @@ export default function AmuleStackSearch() {
       </main>
 
       <style>{`
-  .line-clamp-3 {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  .scrollbar-thin {
-    scrollbar-width: thin;
-  }
-  .scrollbar-thumb-gray-400::-webkit-scrollbar-thumb {
-    background-color: #9ca3af;
-    border-radius: 6px;
-  }
-  .scrollbar-track-gray-100::-webkit-scrollbar-track {
-    background-color: #f3f4f6;
-  }
-  .scrollbar-thumb-gray-400::-webkit-scrollbar {
-    width: 6px;
-  }
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+.scrollbar-thumb-gray-400::-webkit-scrollbar-thumb {
+  background-color: #9ca3af;
+  border-radius: 6px;
+}
+.scrollbar-track-gray-100::-webkit-scrollbar-track {
+  background-color: #f3f4f6;
+}
+.scrollbar-thumb-gray-400::-webkit-scrollbar {
+  width: 6px;
+}
 `}</style>
+
+
 
 
     </div>

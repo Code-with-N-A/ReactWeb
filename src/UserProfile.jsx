@@ -109,9 +109,10 @@ export default function UserProfile({ user, onLogout, sidebarClose }) {
           setOpen(!open);
           if (!open) setView("menu");
         }}
-        className="w-12 h-12 flex items-center justify-center rounded-full 
+     className="w-10 h-10 flex items-center justify-center rounded-full 
         bg-gradient-to-br from-orange-400 to-orange-600 shadow-xl hover:scale-105 
-        transition-all duration-300"
+        transition-all duration-300 cursor-pointer"
+
       >
         {user?.photoURL ? (
           <img src={user.photoURL} className="w-full h-full object-cover rounded-full" />
@@ -123,7 +124,7 @@ export default function UserProfile({ user, onLogout, sidebarClose }) {
       {/* Panel */}
       {open && (
         <div
-          className={`absolute right-0 mt-4 w-80 bg-white shadow-2xl rounded-2xl 
+          className={`absolute right-0 mt-4 w-80 bg-white shadow-2xl 
           p-6 z-[200] transition-all duration-300 ${dropdownClasses}`}
         >
           {!user ? (
@@ -139,7 +140,7 @@ export default function UserProfile({ user, onLogout, sidebarClose }) {
                   setOpen(false);
                   sidebarClose && sidebarClose();
                 }}
-                className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 mt-4 rounded-xl"
+                className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 mt-4 "
               >
                 Sign Up
               </button>
@@ -150,7 +151,7 @@ export default function UserProfile({ user, onLogout, sidebarClose }) {
               {view !== "menu" && (
                 <button
                   onClick={backToMenu}
-                  className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-3"
+                  className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-3 cursor-pointer"
                 >
                   <FiArrowLeft /> Back
                 </button>
@@ -182,14 +183,14 @@ export default function UserProfile({ user, onLogout, sidebarClose }) {
                   {/* Menu Buttons */}
                   <button
                     onClick={() => handleViewChange("profile")}
-                    className="w-full bg-gray-50 hover:bg-gray-100 py-3 px-4 rounded-xl flex items-center gap-3"
+                    className="w-full bg-gray-50 hover:bg-gray-100 py-3 px-4 flex items-center gap-3 cursor-pointer"
                   >
                     <FiUser /> View Profile
                   </button>
 
                   <button
                     onClick={() => handleViewChange("edit")}
-                    className="w-full bg-gray-50 hover:bg-gray-100 py-3 px-4 rounded-xl flex items-center gap-3 mt-2"
+                    className="w-full bg-gray-50 hover:bg-gray-100 py-3 px-4  flex items-center gap-3 mt-2 cursor-pointer"
                   >
                     <FiEdit /> Edit Profile
                   </button>
@@ -203,7 +204,7 @@ export default function UserProfile({ user, onLogout, sidebarClose }) {
                       setOpen(false);
                       sidebarClose && sidebarClose();
                     }}
-                    className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl flex items-center justify-center gap-2"
+                    className="w-full bg-red-600 hover:bg-red-700 text-white py-3 flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <FiLogOut /> Logout
                   </button>
@@ -272,7 +273,7 @@ export default function UserProfile({ user, onLogout, sidebarClose }) {
 
                   <button
                     type="submit"
-                    className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-xl flex items-center justify-center gap-2"
+                    className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 cursor-pointer flex items-center justify-center gap-2"
                   >
                     <FiSave /> Save Changes
                   </button>
