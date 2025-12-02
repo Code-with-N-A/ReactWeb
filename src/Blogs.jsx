@@ -305,7 +305,7 @@ transition-all duration-200 focus-within:shadow-lg relative"
                 </button>
               )}
             </div>
-        
+
             {/* Suggestions */}
             {suggestions.length > 0 && (
               <div
@@ -348,33 +348,42 @@ transition-all duration-200 focus-within:shadow-lg relative"
       )}
 
       {/* Results */}
-      <main className="w-full max-w-7xl mx-auto px-6 mt-10">
+      <main className="w-full max-w-7xl mx-auto px-6 mt-10 font-['Merriweather','Georgia',serif]">
         {!searchStarted && initialCards.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
             {initialCards.map((item) => (
               <article
                 key={item._id}
-                className="border border-gray-200 p-3 shadow-sm hover:shadow-xl transition-shadow duration-300 flex flex-col bg-white"
+                className="border border-gray-200 p-3 shadow-sm hover:shadow-xl transition-shadow duration-300 flex flex-col bg-white rounded-lg"
               >
-                <img
-                  src={item["Img URL"] || PLACEHOLDER}
-                  onError={handleImgError}
-                  alt={item.Heading}
-                  className="w-full h-38 object-cover mb-5 border border-gray-200 cursor-pointer"
-                  onClick={() => toggleZoom(item["Img URL"] || PLACEHOLDER)}
-                />
-                <h3 className="text-1xl font-semibold text-gray-900 mb-3 leading-snug">
+                {/* Image Wrapper */}
+                <div className="w-full h-38 mb-5 border border-gray-200 rounded-md overflow-hidden flex justify-center items-center">
+                  <img
+                    src={item["Img URL"] || PLACEHOLDER}
+                    onError={handleImgError}
+                    alt={item.Heading}
+                    className="w-full h-full object-contain cursor-pointer"
+                    onClick={() => toggleZoom(item["Img URL"] || PLACEHOLDER)}
+                  />
+                </div>
+
+                {/* Heading */}
+                <h3 className="text-lg font-bold text-black mb-3 leading-snug line-clamp-2">
                   {item.Heading}
                 </h3>
-                <p className="text-gray-600 text-base mb-6 line-clamp-3 flex-grow overflow-hidden">
+
+                {/* Description */}
+                <p className="text-gray-600 text-sm mb-6 leading-relaxed line-clamp-3 flex-grow overflow-hidden">
                   {item.Description}
                 </p>
-                <div className="flex justify-between mt-auto">
+
+                {/* Buttons */}
+                <div className="flex justify-between mt-auto gap-2">
                   <a
                     href={item["Linkedin English"]}
                     target="_blank"
                     rel="noreferrer"
-                    className="bg-blue-600 text-white px-5 py-2 text-sm font-semibold hover:bg-blue-700 transition-colors duration-300 shadow-md"
+                    className="bg-black text-[#FFF] px-5 py-2 text-sm font-semibold rounded-md hover:bg-gray-900 transition-colors duration-300 shadow-md"
                   >
                     English
                   </a>
@@ -382,7 +391,7 @@ transition-all duration-200 focus-within:shadow-lg relative"
                     href={item["Link Hinglish"]}
                     target="_blank"
                     rel="noreferrer"
-                    className="bg-green-600 text-white px-5 py-2 text-sm font-semibold hover:bg-green-700 transition-colors duration-300 shadow-md"
+                    className="bg-black text-[#FFF] px-5 py-2 text-sm font-semibold rounded-md hover:bg-gray-900 transition-colors duration-300 shadow-md"
                   >
                     Hinglish
                   </a>
@@ -395,38 +404,20 @@ transition-all duration-200 focus-within:shadow-lg relative"
         {searchStarted && (
           <>
             {loading ? (
-              <div
-                className="flex justify-center py-24"
-                aria-live="polite"
-                aria-busy="true"
-              >
+              <div className="flex justify-center py-24">
                 <svg
                   className="animate-spin h-16 w-16 text-blue-600"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
-                  aria-label="Loading"
                 >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                  ></path>
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
                 </svg>
               </div>
             ) : results.length === 0 ? (
               <div className="text-center py-24">
-                <h2 className="text-5xl font-extrabold text-gray-700">
-                  No Results Found
-                </h2>
+                <h2 className="text-5xl font-extrabold text-gray-700">No Results Found</h2>
                 <p className="text-gray-500 mt-4 max-w-xl mx-auto text-lg">
                   Try checking your spelling or try different keywords.
                 </p>
@@ -436,27 +427,32 @@ transition-all duration-200 focus-within:shadow-lg relative"
                 {results.map((item) => (
                   <article
                     key={item._id}
-                    className="border border-gray-200 p-3 shadow-sm hover:shadow-xl transition-shadow duration-300 flex flex-col bg-white"
+                    className="border border-gray-200 p-3 shadow-sm hover:shadow-xl transition-shadow duration-300 flex flex-col bg-white rounded-lg"
                   >
-                    <img
-                      src={item["Img URL"] || PLACEHOLDER}
-                      onError={handleImgError}
-                      alt={item.Heading}
-                      className="w-full h-38 object-cover mb-5 border border-gray-200 cursor-pointer"
-                      onClick={() => toggleZoom(item["Img URL"] || PLACEHOLDER)}
-                    />
-                    <h3 className="text-1xl font-semibold text-gray-900 mb-3 leading-snug">
+                    <div className="w-full h-38 mb-5 border border-gray-200 rounded-md overflow-hidden flex justify-center items-center">
+                      <img
+                        src={item["Img URL"] || PLACEHOLDER}
+                        onError={handleImgError}
+                        alt={item.Heading}
+                        className="w-full h-full object-contain cursor-pointer"
+                        onClick={() => toggleZoom(item["Img URL"] || PLACEHOLDER)}
+                      />
+                    </div>
+
+                    <h3 className="text-lg font-bold text-black mb-3 leading-snug line-clamp-2">
                       {item.Heading}
                     </h3>
-                    <p className="text-gray-600 text-base mb-6 line-clamp-3 flex-grow overflow-hidden">
+
+                    <p className="text-gray-600 text-sm mb-6 leading-relaxed line-clamp-3 flex-grow overflow-hidden">
                       {item.Description}
                     </p>
-                    <div className="flex justify-between mt-auto">
+
+                    <div className="flex justify-between mt-auto gap-2">
                       <a
                         href={item["Linkedin English"]}
                         target="_blank"
                         rel="noreferrer"
-                        className="bg-blue-600 text-white px-5 py-2 text-sm font-semibold hover:bg-blue-700 transition-colors duration-300 shadow-md"
+                        className="bg-black text-[#FFF] px-5 py-2 text-sm font-semibold rounded-md hover:bg-gray-900 transition-colors duration-300 shadow-md"
                       >
                         English
                       </a>
@@ -464,7 +460,7 @@ transition-all duration-200 focus-within:shadow-lg relative"
                         href={item["Link Hinglish"]}
                         target="_blank"
                         rel="noreferrer"
-                        className="bg-green-600 text-white px-5 py-2 text-sm font-semibold hover:bg-green-700 transition-colors duration-300 shadow-md"
+                        className="bg-black text-[#FFF] px-5 py-2 text-sm font-semibold rounded-md hover:bg-gray-900 transition-colors duration-300 shadow-md"
                       >
                         Hinglish
                       </a>
@@ -478,26 +474,20 @@ transition-all duration-200 focus-within:shadow-lg relative"
       </main>
 
       <style>{`
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 .line-clamp-3 {
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.scrollbar-thin {
-  scrollbar-width: thin;
-}
-.scrollbar-thumb-gray-400::-webkit-scrollbar-thumb {
-  background-color: #9ca3af;
-  border-radius: 6px;
-}
-.scrollbar-track-gray-100::-webkit-scrollbar-track {
-  background-color: #f3f4f6;
-}
-.scrollbar-thumb-gray-400::-webkit-scrollbar {
-  width: 6px;
-}
 `}</style>
+
 
 
 
