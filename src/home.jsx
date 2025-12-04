@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import Projects from "./Projects";
 import FAQSection from "./FAQ";
 import Advtigment from "./adds";
+import SignupNotification from "./Snotificetion";
 
 function Home() {
   const skills = ["React", "Node.js", "Express", "MongoDB", "Tailwind CSS", "JavaScript", "HTML", "CSS"];
@@ -99,7 +100,7 @@ function Home() {
           className="flex-1 flex justify-center mt-10 md:mt-0"
         >
           <img
-            src={`${import.meta.env.BASE_URL}img/nitesh office .jpg`}
+            src={`${import.meta.env.BASE_URL}img/nitesh office.jpg`}
             alt="Illustration of a web developer coding"
             className="w-72 md:w-130 drop-shadow-lg rounded-2xl"
             loading="lazy"
@@ -141,6 +142,7 @@ function Home() {
           ))}
         </div>
       </section>
+      <SignupNotification/>
       <Projects />
       <FAQSection/>
     </div>

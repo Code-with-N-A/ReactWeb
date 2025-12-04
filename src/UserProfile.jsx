@@ -7,24 +7,27 @@ export default function UserProfile({ user, onLogout, sidebarClose }) {
   const [view, setView] = useState("menu");
   const [displayName, setDisplayName] = useState("");
   const [joinDate, setJoinDate] = useState("");
+  const [lastLoginTime, setLastLoginTime] = useState("");
   const cardRef = useRef(null);
   const navigate = useNavigate();
 
-  // Load saved name + date from localStorage
+  // Load saved name and last login from localStorage (user-specific)
   useEffect(() => {
-    const savedName = localStorage.getItem("userDisplayName");
-    const savedDate = localStorage.getItem("userJoinDate");
+    if (!user?.email) return;
+
+    const savedName = localStorage.getItem(`userDisplayName_${user.email}`);
+    const savedLastLogin = localStorage.getItem(`userLastLogin_${user.email}`);
 
     if (savedName) setDisplayName(savedName);
-    if (savedDate) setJoinDate(savedDate);
-  }, []);
+    if (savedLastLogin) setLastLoginTime(savedLastLogin);
+  }, [user?.email]);
 
-  // When user logs in or refresh happens — update info
+  // When user logs in or refresh happens — update info (user-specific)
   useEffect(() => {
     if (!user) return;
 
     // Use localStorage name if available, otherwise Firebase name
-    const nameFromLocal = localStorage.getItem("userDisplayName");
+    const nameFromLocal = localStorage.getItem(`userDisplayName_${user.email}`);
     const finalName =
       nameFromLocal ||
       user.displayName ||
@@ -34,19 +37,29 @@ export default function UserProfile({ user, onLogout, sidebarClose }) {
         : "User");
 
     setDisplayName(finalName);
-    localStorage.setItem("userDisplayName", finalName);
+    localStorage.setItem(`userDisplayName_${user.email}`, finalName);
 
-    // Joining date
-    if (!localStorage.getItem("userJoinDate")) {
-      const date = user.metadata?.creationTime ? new Date(user.metadata.creationTime) : new Date();
-      const formattedDate = `${date.getDate().toString().padStart(2, "0")}/${(
-        date.getMonth() + 1
-      )
-        .toString()
-        .padStart(2, "0")}/${date.getFullYear().toString().slice(-2)}`;
-      setJoinDate(formattedDate);
-      localStorage.setItem("userJoinDate", formattedDate);
-    }
+    // Joining date: Always load directly from Firebase user.metadata.creationTime
+    const date = user.metadata?.creationTime ? new Date(user.metadata.creationTime) : new Date();
+    const formattedDate = `${date.getDate().toString().padStart(2, "0")}/${(
+      date.getMonth() + 1
+    )
+      .toString()
+      .padStart(2, "0")}/${date.getFullYear().toString().slice(-2)}`;
+    setJoinDate(formattedDate);
+
+    // Last login time: Update on every login/refresh
+    const now = new Date();
+    const formattedLastLogin = `${now.getDate().toString().padStart(2, "0")}/${(
+      now.getMonth() + 1
+    )
+      .toString()
+      .padStart(2, "0")}/${now.getFullYear()} ${now.getHours().toString().padStart(2, "0")}:${now
+      .getMinutes()
+      .toString()
+      .padStart(2, "0")}:${now.getSeconds().toString().padStart(2, "0")}`;
+    setLastLoginTime(formattedLastLogin);
+    localStorage.setItem(`userLastLogin_${user.email}`, formattedLastLogin);
   }, [user]);
 
   // Close on outside click
@@ -70,8 +83,9 @@ export default function UserProfile({ user, onLogout, sidebarClose }) {
   const backToMenu = () => setView("menu");
 
   const handleSave = (newName) => {
+    if (!user?.email) return;
     setDisplayName(newName);
-    localStorage.setItem("userDisplayName", newName);
+    localStorage.setItem(`userDisplayName_${user.email}`, newName);
     setView("menu");
   };
 
@@ -86,19 +100,13 @@ export default function UserProfile({ user, onLogout, sidebarClose }) {
     return diffDays >= 0 ? diffDays : "N/A"; // Handle future dates
   };
 
-  // Helper function to get current date/time and day
-  const getCurrentDateTimeAndDay = () => {
-    const now = new Date();
-    const formattedDateTime = `${now.getDate().toString().padStart(2, "0")}/${(
-      now.getMonth() + 1
-    )
-      .toString()
-      .padStart(2, "0")}/${now.getFullYear()} ${now.getHours().toString().padStart(2, "0")}:${now
-      .getMinutes()
-      .toString()
-      .padStart(2, "0")}:${now.getSeconds().toString().padStart(2, "0")}`;
-    const dayName = now.toLocaleDateString("en-US", { weekday: "long" });
-    return { formattedDateTime, dayName };
+  // Helper function to get day from last login time
+  const getDayFromLastLogin = () => {
+    if (!lastLoginTime) return "N/A";
+    const [datePart] = lastLoginTime.split(" ");
+    const [day, month, year] = datePart.split("/");
+    const loginDateObj = new Date(`20${year}`, month - 1, day);
+    return loginDateObj.toLocaleDateString("en-US", { weekday: "long" });
   };
 
   return (
@@ -109,10 +117,9 @@ export default function UserProfile({ user, onLogout, sidebarClose }) {
           setOpen(!open);
           if (!open) setView("menu");
         }}
-     className="w-10 h-10 flex items-center justify-center rounded-full 
+        className="w-10 h-10 flex items-center justify-center rounded-full 
         bg-gradient-to-br from-orange-400 to-orange-600 shadow-xl hover:scale-105 
         transition-all duration-300 cursor-pointer"
-
       >
         {user?.photoURL ? (
           <img src={user.photoURL} className="w-full h-full object-cover rounded-full" />
@@ -182,7 +189,11 @@ export default function UserProfile({ user, onLogout, sidebarClose }) {
 
                   {/* Menu Buttons */}
                   <button
-                    onClick={() => handleViewChange("profile")}
+                    onClick={() => {
+                      navigate("/user-account"); // Navigate to YouserAcoount.jsx page
+                      setOpen(false);
+                      sidebarClose && sidebarClose();
+                    }}
                     className="w-full bg-gray-50 hover:bg-gray-100 py-3 px-4 flex items-center gap-3 cursor-pointer"
                   >
                     <FiUser /> View Profile
@@ -209,43 +220,6 @@ export default function UserProfile({ user, onLogout, sidebarClose }) {
                     <FiLogOut /> Logout
                   </button>
                 </>
-              )}
-
-              {/* --- PROFILE VIEW --- */}
-              {view === "profile" && (
-                <div className="flex flex-col gap-3">
-                  <h3 className="text-lg font-bold text-gray-900">Your Profile</h3>
-
-                  <div className="flex items-center gap-4">
-                    <div className="w-20 h-20 rounded-full overflow-hidden shadow bg-gray-200">
-                      {user?.photoURL ? (
-                        <img src={user.photoURL} className="w-full h-full object-cover" />
-                      ) : (
-                        <FiUser className="w-full h-full p-5 text-gray-600" />
-                      )}
-                    </div>
-
-                    <div>
-                      <p className="font-semibold text-gray-900">{displayName}</p>
-                      <p className="text-sm text-gray-600">{user.email}</p>
-                      <p className="text-xs text-gray-500 mt-1">Joined: {joinDate}</p>
-                    </div>
-                  </div>
-
-                  {/* New Section: Current Date/Time, Day, and Days Since Joining */}
-                  <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                    <h4 className="text-sm font-semibold text-gray-800 mb-2">Current Info</h4>
-                    <p className="text-xs text-gray-600">
-                      <strong>Date & Time:</strong> {getCurrentDateTimeAndDay().formattedDateTime}
-                    </p>
-                    <p className="text-xs text-gray-600">
-                      <strong>Day:</strong> {getCurrentDateTimeAndDay().dayName}
-                    </p>
-                    <p className="text-xs text-gray-600">
-                      <strong>Days Since Joining:</strong> {calculateDaysSinceJoining()}
-                    </p>
-                  </div>
-                </div>
               )}
 
               {/* --- EDIT VIEW --- */}

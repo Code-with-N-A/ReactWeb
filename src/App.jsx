@@ -9,6 +9,7 @@ import Footer from "./Footer";
 import Blogs from "./Blogs";
 import Signup from "./Signup";
 import ProtectedRoute from "./ProtectedRoute";
+import LandingPage from "./YouserAcoount";
 
 function App() {
   return (
@@ -22,9 +23,7 @@ function App() {
         <Route
           path="/about"
           element={
-            <ProtectedRoute>
               <About />
-            </ProtectedRoute>
           }
         />
         <Route
@@ -38,13 +37,12 @@ function App() {
         <Route
           path="/contact"
           element={
-            <ProtectedRoute>
               <Contact />
-            </ProtectedRoute>
           }
         />
-
+zz
         <Route path="/signup" element={<Signup />} />
+        <Route path="/user-account" element={<LandingPage />} />
 
         <Route path="*" element={<Home />} />
       </Routes>
