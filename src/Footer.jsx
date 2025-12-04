@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 export default function Footer() {
   return (
-    <footer className="bg-gradient-to-r from-gray-900 via-gray-800 to-black text-gray-300 pt-12 pb-6 px-6 md:px-20 mt-10 relative overflow-hidden z-100">
+    <footer className="bg-gradient-to-r from-gray-900 via-gray-800 to-black text-gray-300 pt-12 pb-6 px-6 md:px-20 mt-10 relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.05),transparent_70%)] pointer-events-none"></div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-10 relative z-10">
